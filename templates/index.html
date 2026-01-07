@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Monitoring System</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Weather Monitoring System</h1>
+            <div class="unit-toggle">
+                <button id="metric-toggle" class="active">°C</button>
+                <button id="imperial-toggle">°F</button>
+            </div>
+        </header>
+
+        <section class="search-section">
+            <div class="search-container">
+                <label for="location-input"></label>
+                <input type="text" id="location-input" placeholder="Enter city name...">
+                <button id="search-btn"><i class="fas fa-search"></i></button>
+                <button id="geolocation-btn" title="Use my location"><i class="fas fa-map-marker-alt"></i></button>
+            </div>
+        </section>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="current">Current Weather</button>
+            <button class="tab-btn" data-tab="forecast">Forecast</button>
+        </div>
+
+        <div class="tab-content">
+            <!-- Current Weather Tab -->
+            <section id="current" class="tab-pane active">
+                <div id="weather-loader" class="loader">Loading...</div>
+                <div id="current-weather" class="hidden">
+                    <div class="weather-header">
+                        <div class="location-time">
+                            <h2 id="location-name">Location</h2>
+                            <p id="current-time">Current Time</p>
+                        </div>
+                        <div class="weather-icon-container">
+                            <img id="weather-icon" src="" alt="Weather Icon">
+                        </div>
+                    </div>
+
+                    <div class="weather-details">
+                        <div class="main-temp">
+                            <span id="current-temp">--</span><span class="temp-unit">°C</span>
+                            <p id="weather-description">Weather Description</p>
+                        </div>
+
+                        <div class="details-grid">
+                            <div class="detail-item">
+                                <i class="fas fa-temperature-low"></i>
+                                <span>Feels Like</span>
+                                <span id="feels-like">--</span><span class="temp-unit">°C</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-tint"></i>
+                                <span>Humidity</span>
+                                <span id="humidity">--%</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-wind"></i>
+                                <span>Wind</span>
+                                <span id="wind-speed">-- m/s</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-compress-alt"></i>
+                                <span>Pressure</span>
+                                <span id="pressure">-- hPa</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-sun"></i>
+                                <span>Sunrise</span>
+                                <span id="sunrise">--:--</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-moon"></i>
+                                <span>Sunset</span>
+                                <span id="sunset">--:--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="weather-error" class="error-message hidden">
+                    Could not retrieve weather data. Please check the location and try again.
+                </div>
+            </section>
+
+            <!-- Forecast Tab -->
+            <section id="forecast" class="tab-pane">
+                <div id="forecast-loader" class="loader hidden">Loading...</div>
+
+                <div class="chart-container">
+                    <canvas id="forecast-chart"></canvas>
+                </div>
+
+                <div class="forecast-cards" id="forecast-cards">
+                    <!-- Forecast cards will be added here dynamically -->
+                </div>
+
+                <div id="forecast-error" class="error-message hidden">
+                    Could not retrieve forecast data. Please check the location and try again.
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <footer>
+        <p>Weather Monitoring System - 2025 | Powered by OpenWeatherMap API</p>
+        <p>Made by Tanishq Mudaliar, Saivel Konar, Hrshita Balakrishnan & Pranali Raut</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
