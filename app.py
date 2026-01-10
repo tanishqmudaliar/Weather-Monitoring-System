@@ -100,25 +100,26 @@ def github_webhook():
     # Step 6: Reload the webapp via PythonAnywhere API (improved logging)
     reload_status = "skipped"
     if PYTHONANYWHERE_API_TOKEN and PYTHONANYWHERE_USERNAME:
+        domain = f"{PYTHONANYWHERE_USERNAME}.pythonanywhere.com"
+        url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{domain}/reload/'
+        app.logger.info("Attempting reload - URL: %s", url)
+        app.logger.info("Token (first 8 chars): %s...",
+                        PYTHONANYWHERE_API_TOKEN[:8] if PYTHONANYWHERE_API_TOKEN else "None")
+
         try:
-            url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/'
             reload_response = requests.post(
                 url,
                 headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
                 timeout=30
             )
-            resp_text = (reload_response.text or "").strip()
-            # Try to include JSON body if available for clearer logs
-            try:
-                resp_body = reload_response.json()
-            except Exception:
-                resp_body = resp_text
+            app.logger.info("Reload response: status=%s, body=%s",
+                            reload_response.status_code,
+                            reload_response.text[:500])
 
             if reload_response.ok:
                 reload_status = "success"
             else:
-                reload_status = f"failed: {reload_response.status_code} - {str(resp_body)[:1000]}"
-                app.logger.error("PythonAnywhere reload failed (%s): %s", reload_response.status_code, resp_text)
+                reload_status = f"failed: {reload_response.status_code} - {reload_response.text[:500]}"
         except requests.RequestException as e:
             reload_status = f"error: {str(e)}"
             app.logger.exception("Exception when calling PythonAnywhere API")
