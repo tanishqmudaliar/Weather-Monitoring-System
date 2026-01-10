@@ -1,10 +1,12 @@
 # Weather Monitoring System
 
-A modern, responsive web application for monitoring real-time weather conditions and forecasts powered by the OpenWeatherMap API.
+A modern, responsive web application for monitoring real-time weather conditions and forecasts powered by the OpenWeatherMap API. 
 
 ![Weather Monitoring System](https://img.shields.io/badge/Python-3.14-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-3.1.2-green.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Auto Deploy](https://img.shields.io/badge/Deploy-Automated-brightgreen.svg)
+![PythonAnywhere](https://img.shields.io/badge/Hosted-PythonAnywhere-orange.svg)
 
 ## Features
 
@@ -23,27 +25,63 @@ A modern, responsive web application for monitoring real-time weather conditions
 ### User Interface
 - **Unit Toggle**: Switch between Metric (°C) and Imperial (°F) units
 - **Geolocation Support**: Automatically detect your current location
-- **Responsive Design**: Optimized for desktop, tablet, and mobile devices
+- **Responsive Design**:  Optimized for desktop, tablet, and mobile devices
 - **Tab Navigation**: Switch between current weather and forecast views
 - **Modern UI**: Clean, intuitive interface with Font Awesome icons
 
 ## Tech Stack
 
 ### Backend
-- **Python 3.14**: Core programming language
+- **Python 3.14**:  Core programming language
 - **Flask**: Web framework for handling API requests and routing
 - **Requests**: HTTP library for API calls
 - **python-dotenv**: Environment variable management
 
 ### Frontend
 - **HTML5**: Semantic markup
-- **CSS3**: Modern styling with CSS variables and flexbox/grid
+- **CSS3**:  Modern styling with CSS variables and flexbox/grid
 - **JavaScript (ES6+)**: Interactive functionality
-- **Chart.js**: Data visualization for forecast charts
+- **Chart. js**: Data visualization for forecast charts
 - **Font Awesome**: Icon library
 
 ### API
 - **OpenWeatherMap API**: Weather data provider
+
+### Deployment & Infrastructure
+- **PythonAnywhere**: Cloud hosting platform
+- **GitHub Webhooks**: Automated deployment on push
+- **GitHub Actions**: CI/CD pipeline integration
+
+## 🚀 Automated Deployment
+
+This project features **fully automated deployment** - every push to `master` automatically deploys to PythonAnywhere! 
+
+### How It Works
+
+```
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────────────────┐
+│  Push to        │ ---> │  GitHub sends   │ ---> │  Flask webhook endpoint     │
+│  master branch  │ ---> │  webhook POST   │ ---> │  pulls code & reloads app   │
+└─────────────────┘      └─────────────────┘      └─────────────────────────────┘
+```
+
+### Deployment Architecture
+
+| Component | Purpose |
+|-----------|---------|
+| **GitHub Webhook** | Triggers deployment on every push to master |
+| **`/github-webhook` endpoint** | Receives webhook, runs `git pull`, reloads app |
+| **PythonAnywhere API** | Reloads the webapp after code update |
+| **[PythonAnywhere-Auto-Renew](https://github.com/tanishqmudaliar/PythonAnywhere-Auto-Renew)** | Keeps the free tier app alive forever |
+
+### Zero-Downtime Deployment
+
+1. ✅ Push code to GitHub
+2. ✅ Webhook automatically triggers
+3. ✅ Code is pulled on PythonAnywhere
+4. ✅ Dependencies are installed
+5. ✅ Webapp reloads with new code
+6. ✅ Live in seconds! 
 
 ## Installation
 
@@ -51,20 +89,21 @@ A modern, responsive web application for monitoring real-time weather conditions
 - Python 3.14 installed on your system
 - OpenWeatherMap API key ([Get one for free](https://home.openweathermap.org/api_keys))
 
-### Setup Steps
+### Local Development Setup
 
-1. **Clone or download the repository**
+1. **Clone the repository**
    ```bash
-   cd "Weather Monitoring System"
+   git clone https://github.com/tanishqmudaliar/Weather-Monitoring-System.git
+   cd Weather-Monitoring-System
    ```
 
 2. **Install required Python packages**
    ```bash
-   pip install flask requests python-dotenv
+   pip install -r requirements.txt
    ```
 
 3. **Create a `.env` file in the project root**
-   ```
+   ```env
    OPENWEATHER_API_KEY=your_api_key_here
    ```
    Replace `your_api_key_here` with your actual OpenWeatherMap API key.
@@ -77,44 +116,77 @@ A modern, responsive web application for monitoring real-time weather conditions
 5. **Open your browser**
    Navigate to `http://127.0.0.1:5000`
 
+### PythonAnywhere Deployment Setup
+
+#### Step 1: Initial Setup on PythonAnywhere
+
+1. Create a free account at [pythonanywhere.com](https://www.pythonanywhere.com)
+2. Open a Bash console and clone the repo:
+   ```bash
+   git clone https://github.com/tanishqmudaliar/Weather-Monitoring-System.git
+   ```
+3. Set up your web app pointing to the cloned directory
+4. Create a `.env` file with your secrets:
+   ```env
+   OPENWEATHER_API_KEY=your_openweather_key
+   GITHUB_WEBHOOK_SECRET=your_random_secret
+   PYTHONANYWHERE_API_TOKEN=your_api_token
+   PYTHONANYWHERE_USERNAME=your_username
+   ```
+
+#### Step 2: Configure GitHub Webhook
+
+1. Go to your repo → **Settings** → **Webhooks** → **Add webhook**
+2. Configure: 
+   - **Payload URL**: `https://yourusername.pythonanywhere.com/github-webhook`
+   - **Content type**: `application/json`
+   - **Secret**: Same as `GITHUB_WEBHOOK_SECRET` in your `.env`
+   - **Events**: Just the push event
+3. Save the webhook
+
+#### Step 3: Keep Your App Alive
+
+Use [PythonAnywhere-Auto-Renew](https://github.com/tanishqmudaliar/PythonAnywhere-Auto-Renew) to prevent your free tier app from expiring. 
+
 ## Project Structure
 
 ```
-Weather Monitoring System/
+Weather-Monitoring-System/
 │
-├── app.py                  # Flask backend server
-├── .env                    # Environment variables (API key)
-├── README.md              # Project documentation
+├── . github/
+│   └── workflows/
+│       └── deploy.yml      # CI/CD workflow
+│
+├── app.py                  # Flask backend server + webhook endpoint
+├── .env                    # Environment variables (not in git)
+├── requirements.txt        # Python dependencies
+├── README.md               # Project documentation
 │
 ├── templates/
-│   └── index.html         # Main HTML template
+│   └── index.html          # Main HTML template
 │
 └── static/
-    ├── app.js             # JavaScript functionality
-    ├── styles.css         # CSS styling
-    └── favicon.ico        # Website icon
+    ├── app.js              # JavaScript functionality
+    ├── styles.css          # CSS styling
+    └── favicon.ico         # Website icon
 ```
 
 ## API Endpoints
 
-### `/`
-- **Method**: GET
-- **Description**: Serves the main application page
+### Application Endpoints
 
-### `/api/current-weather`
-- **Method**: GET
-- **Parameters**: `location` (city name)
-- **Response**: Current weather data including temperature, humidity, wind, etc.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Serves the main application page |
+| `/api/current-weather` | GET | Current weather data (param: `location`) |
+| `/api/forecast` | GET | 5-day weather forecast (param: `location`) |
+| `/api/reverse-geocode` | GET | City name from coordinates (params: `lat`, `lon`) |
 
-### `/api/forecast`
-- **Method**: GET
-- **Parameters**: `location` (city name)
-- **Response**: 5-day weather forecast with 3-hour intervals
+### Deployment Endpoint
 
-### `/api/reverse-geocode`
-- **Method**: GET
-- **Parameters**: `lat` (latitude), `lon` (longitude)
-- **Response**: City name from coordinates
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/github-webhook` | POST | Receives GitHub webhook, pulls code, reloads app |
 
 ## Usage
 
@@ -138,28 +210,20 @@ Weather Monitoring System/
 2. View the temperature trend chart
 3. Scroll through daily forecast cards
 
-## Features in Detail
+## 🔗 Related Repositories
 
-### Temperature Conversion
-The application supports seamless switching between Celsius and Fahrenheit units without requiring new API calls. All temperatures, including feels-like and forecast data, are converted instantly.
+| Repository | Purpose |
+|------------|---------|
+| **[Weather-Monitoring-System](https://github.com/tanishqmudaliar/Weather-Monitoring-System)** | Main application (this repo) |
+| **[PythonAnywhere-Auto-Renew](https://github.com/tanishqmudaliar/PythonAnywhere-Auto-Renew)** | Keeps the app alive on free tier |
 
-### Geolocation
-Uses the browser's Geolocation API combined with OpenWeatherMap's reverse geocoding to automatically detect and display weather for your current location.
-
-### Responsive Design
-- Desktop: Full-width layout with multi-column grids
-- Tablet: Adaptive grid that adjusts to screen size
-- Mobile: Single-column layout optimized for touch interaction
-
-### Error Handling
-- Graceful error messages for invalid locations
-- Network error handling
-- API timeout protection
-- User-friendly error notifications
+Together, these repos provide: 
+- ✅ **Instant automated deployment** on every push
+- ✅ **24/7 uptime** with auto-renewal bot
+- ✅ **Zero maintenance** hosting solution
 
 ## Dependencies
 
-The project includes a `requirements.txt` file with all necessary dependencies:
 ```
 Flask==3.0.0
 requests==2.31.0
@@ -174,8 +238,13 @@ pip install -r requirements.txt
 ## Configuration
 
 ### Environment Variables
-The application requires the following environment variable:
-- `OPENWEATHER_API_KEY`: Your OpenWeatherMap API key
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `OPENWEATHER_API_KEY` | OpenWeatherMap API key | ✅ Yes |
+| `GITHUB_WEBHOOK_SECRET` | Secret for webhook verification | ✅ For auto-deploy |
+| `PYTHONANYWHERE_API_TOKEN` | PythonAnywhere API token | ✅ For auto-deploy |
+| `PYTHONANYWHERE_USERNAME` | Your PythonAnywhere username | ✅ For auto-deploy |
 
 ### API Rate Limits
 Free tier OpenWeatherMap accounts have the following limits:
@@ -209,9 +278,15 @@ OPENWEATHER_API_KEY=your_actual_api_key
 - Ensure you're using HTTPS or localhost
 - Check browser console for specific errors
 
+### Webhook Not Triggering Deployment
+- Verify webhook secret matches in GitHub and `.env`
+- Check webhook delivery status in GitHub Settings → Webhooks
+- Ensure PythonAnywhere API token is valid
+- Check PythonAnywhere error logs
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
+Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests. 
 
 ## Credits
 
@@ -233,6 +308,7 @@ This project is open source and available under the MIT License.
 - Font Awesome for icons
 - Chart.js for data visualization
 - Flask framework for backend development
+- PythonAnywhere for hosting
 
 ## Future Enhancements
 
@@ -254,3 +330,4 @@ For questions or support, please contact the development team.
 
 **Made with ❤️ by the Weather Monitoring System Team**
 
+**🌐 [Live Demo](https://tanishqmudaliar.pythonanywhere.com) | 🔄 [Auto-Renew Bot](https://github.com/tanishqmudaliar/PythonAnywhere-Auto-Renew)**
