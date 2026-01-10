@@ -14,9 +14,6 @@ app = Flask(__name__)
 
 # Get API key from environment variables
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
-if not API_KEY:
-    raise ValueError("No OpenWeather API key found. Please set OPENWEATHER_API_KEY in . env file")
-
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
 PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
