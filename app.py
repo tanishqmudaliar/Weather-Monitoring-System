@@ -1,7 +1,7 @@
 import os
 import requests
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -20,6 +20,36 @@ BASE_URL = "https://api.openweathermap.org/data/2.5"
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(app.static_folder, 'favicon.ico')
+
+@app.route('/get_weather', methods=['GET'])
+def get_weather():
+    city = request.args.get('city')
+
+    if not city:
+        return jsonify({'error': 'City name is required'}), 400
+
+    # Parameters for OpenWeatherMap API
+    params = {
+        'q': city,
+        'appid': API_KEY,
+        'units': 'metric'
+    }
+
+    try:
+        response = requests.get(BASE_URL, params=params)
+        data = response.json()
+
+        if response.status_code == 200:
+            return jsonify(data)
+        else:
+            return jsonify({'error': data.get('message', 'Error fetching weather data')}), response.status_code
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route("/api/reverse-geocode")
 def reverse_geocode():
@@ -71,6 +101,7 @@ def get_current_weather():
         "wind_speed": data['wind']['speed'],
         "wind_direction": data['wind']['deg'],
         "clouds": data.get('clouds', {}).get('all', 0),
+        "visibility": data.get('visibility', 10000),  # Added visibility
         "timestamp": data['dt'],
         "sunrise": data['sys']['sunrise'],
         "sunset": data['sys']['sunset']

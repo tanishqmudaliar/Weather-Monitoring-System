@@ -30,6 +30,18 @@
       tabButtons.forEach((button) => {
         button.addEventListener("click", () => switchTab(button.dataset.tab));
       });
+
+      // Add quick city tag listeners
+      const quickCityTags = document.querySelectorAll(".quick-city-tag");
+      quickCityTags.forEach((tag) => {
+        tag.addEventListener("click", () => {
+          const city = tag.getAttribute("data-city");
+          if (city && locationInput) {
+            locationInput.value = city;
+            handleSearch();
+          }
+        });
+      });
     }
 
     // Tab Switching
@@ -211,10 +223,16 @@
       if (!data) return;
 
       const locationNameEl = document.getElementById("location-name");
-      if (locationNameEl) locationNameEl.textContent = data.location || "";
+      if (locationNameEl) {
+        const locationText = locationNameEl.querySelector("span");
+        if (locationText) locationText.textContent = data.location || "";
+      }
 
       const timeEl = document.getElementById("current-time");
-      if (timeEl) timeEl.textContent = new Date().toLocaleString();
+      if (timeEl) {
+        const timeText = timeEl.querySelector("span");
+        if (timeText) timeText.textContent = new Date().toLocaleString();
+      }
 
       const weatherIcon = document.getElementById("weather-icon");
       if (weatherIcon && data.icon) {
@@ -233,7 +251,10 @@
       }
 
       const descEl = document.getElementById("weather-description");
-      if (descEl) descEl.textContent = data.description || "";
+      if (descEl) {
+        const descText = descEl.querySelector("span");
+        if (descText) descText.textContent = data.description || "";
+      }
 
       // Feels like
       const feelsLikeC = Number(data.feels_like) || 0;
@@ -266,6 +287,25 @@
         const sunsetEl = document.getElementById("sunset");
         if (sunriseEl) sunriseEl.textContent = sunriseDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         if (sunsetEl) sunsetEl.textContent = sunsetDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      }
+
+      // Additional info - Wind Direction
+      const windDirectionEl = document.getElementById("wind-direction");
+      if (windDirectionEl && data.wind_direction !== undefined) {
+        windDirectionEl.textContent = `${data.wind_direction}°`;
+      }
+
+      // Clouds
+      const cloudsEl = document.getElementById("clouds");
+      if (cloudsEl && data.clouds !== undefined) {
+        cloudsEl.textContent = `${data.clouds}%`;
+      }
+
+      // Visibility
+      const visibilityEl = document.getElementById("visibility");
+      if (visibilityEl && data.visibility !== undefined) {
+        const visibilityKm = (data.visibility / 1000).toFixed(1);
+        visibilityEl.textContent = `${visibilityKm} km`;
       }
 
       const weatherPane = document.getElementById("current-weather");
