@@ -88,22 +88,30 @@ def github_webhook():
             text=True,
             timeout=120
         )
-    except Exception as e:
+    except Exception:
         # Non-fatal, continue anyway
         pip_result = None
 
-    # Step 6: Reload the webapp via PythonAnywhere API
-    reload_status = "skipped"
-    if PYTHONANYWHERE_API_TOKEN:
-        try:
-            reload_response = requests.post(
-                f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/',
-                headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
-                timeout=30
-            )
-            reload_status = "success" if reload_response.ok else f"failed:  {reload_response.status_code}"
-        except Exception as e:
-            reload_status = f"error: {str(e)}"
+    # Step 6: Reload the webapp via PythonAnywhere API (improved logging)
+        reload_status = "skipped"
+        if PYTHONANYWHERE_API_TOKEN and PYTHONANYWHERE_USERNAME:
+            try:
+                url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/'
+                reload_response = requests.post(
+                    url,
+                    headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
+                    timeout=30
+                )
+                resp_text = (reload_response.text or "").strip()
+                if reload_response.ok:
+                    reload_status = "success"
+                else:
+                    # include status code and a trimmed response body for debugging
+                    reload_status = f"failed: {reload_response.status_code} - {resp_text[:500]}"
+                    app.logger.error("PA reload failed (%s): %s", reload_response.status_code, resp_text)
+            except requests.RequestException as e:
+                reload_status = f"error: {str(e)}"
+                app.logger.exception("Exception when calling PythonAnywhere API")
 
     # Step 7: Return success response
     return jsonify({
@@ -111,7 +119,8 @@ def github_webhook():
         'branch': ref,
         'git_output': git_output,
         'reload_status': reload_status,
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now().isoformat(),
+        'pip_output': pip_result
     }), 200
 
 @app.route('/')
