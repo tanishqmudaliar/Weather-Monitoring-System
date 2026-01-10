@@ -1,0 +1,20 @@
+name: Deployment Status
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # This links the job to the Environment you just created
+    environment: 
+      name: Production
+      url: https://tanishqmudaliar.pythonanywhere.com/
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Notify GitHub of Deployment
+        run: echo "Deployment record created for PythonAnywhere"
