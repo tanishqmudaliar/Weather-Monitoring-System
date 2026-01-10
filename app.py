@@ -1,4 +1,6 @@
 import os
+import sys
+import logging
 import subprocess
 import hmac
 import hashlib
@@ -12,15 +14,24 @@ load_dotenv()
 
 app = Flask(__name__)
 
+app.logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stderr)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
+handler.setFormatter(formatter)
+app.logger.addHandler(handler)
+
+# Log at startup to verify logging works
+app.logger.info("App starting - PA_TOKEN exists: %s, PA_USER: %s",
+                bool(os.getenv('PYTHONANYWHERE_API_TOKEN')),
+                os.getenv('PYTHONANYWHERE_USERNAME'))
+
 # Get API key from environment variables
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
-if not API_KEY:
-    raise ValueError("No OpenWeather API key found. Please set OPENWEATHER_API_KEY in . env file")
-
-BASE_URL = "https://api.openweathermap.org/data/2.5"
 WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
 PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
+BASE_URL = "https://api.openweathermap.org/data/2.5"
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 
 @app.route('/github-webhook', methods=['POST'])
@@ -29,6 +40,10 @@ def github_webhook():
     Receives GitHub webhook, pulls latest code, and reloads the webapp.
     Fully automated deployment on every push to master.
     """
+    app.logger.info("ENV CHECK - PA_TOKEN exists: %s, length: %s",
+                    bool(PYTHONANYWHERE_API_TOKEN),
+                    len(PYTHONANYWHERE_API_TOKEN) if PYTHONANYWHERE_API_TOKEN else 0)
+    app.logger.info("ENV CHECK - PA_USER: %s", PYTHONANYWHERE_USERNAME)
     # Verify signature (unchanged)
     if WEBHOOK_SECRET:
         signature = request.headers.get('X-Hub-Signature-256', '')
