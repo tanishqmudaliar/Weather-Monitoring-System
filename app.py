@@ -16,13 +16,12 @@ app = Flask(__name__)
 
 # Get API key from environment variables
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
-BASE_URL = "https://api.openweathermap.org/data/2.5"
 WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
 PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 DEPLOYMENT_LOG = f"{PROJECT_PATH}/deployment.log"
-
+BASE_URL = "https://api.openweathermap.org/data/2.5"
 
 def log_deployment(message):
     """Write deployment events to a persistent log file"""
@@ -33,13 +32,60 @@ def log_deployment(message):
     except Exception as e:
         print(f"Failed to write log: {e}")
 
+def push_log_to_github():
+    """
+    Commit and push deployment.log to GitHub with timestamped message.
+    Runs after server successfully reloads.
+    """
+    try:
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        commit_message = f"Server reload successful - {timestamp}"
 
-def reload_webapp_async(delay=10):
+        # Add deployment.log to git
+        subprocess.run(
+            ['git', 'add', 'deployment.log'],
+            cwd=PROJECT_PATH,
+            capture_output=True,
+            timeout=10
+        )
+
+        # Commit with timestamped message
+        commit_result = subprocess.run(
+            ['git', 'commit', '-m', commit_message],
+            cwd=PROJECT_PATH,
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+
+        # Only push if there was something to commit
+        if commit_result.returncode == 0:
+            push_result = subprocess.run(
+                ['git', 'push', 'origin', 'master'],
+                cwd=PROJECT_PATH,
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
+
+            if push_result.returncode == 0:
+                log_deployment(f"✓ Log pushed to GitHub: {commit_message}")
+            else:
+                log_deployment(f"✗ Git push failed: {push_result.stderr.strip()}")
+        else:
+            # No changes to commit (this is fine)
+            log_deployment("No new log entries to push")
+
+    except subprocess.TimeoutExpired:
+        log_deployment("✗ Git push timed out")
+    except Exception as e:
+        log_deployment(f"✗ Git push error: {str(e)}")
+
+def reload_webapp_async(delay=3):
     """
     Reload the webapp after a delay, running in background thread.
     This allows the webhook response to be sent before reload.
     """
-
     def do_reload():
         time.sleep(delay)  # Wait for response to be sent
 
@@ -67,13 +113,14 @@ def reload_webapp_async(delay=10):
     thread = threading.Thread(target=do_reload, daemon=True)
     thread.start()
 
-
-# Log server startup
+# Log server startup and push to GitHub
 log_deployment("=" * 60)
 log_deployment("SERVER STARTED SUCCESSFULLY")
 log_deployment(f"Flask app initialized at {datetime.now().isoformat()}")
 log_deployment("=" * 60)
 
+# Push the log to GitHub after successful startup (in background to not delay startup)
+threading.Thread(target=push_log_to_github, daemon=True).start()
 
 @app.route('/github-webhook', methods=['POST'])
 def github_webhook():
@@ -110,6 +157,11 @@ def github_webhook():
     ref = payload.get('ref', '')
     commit_msg = payload.get('head_commit', {}).get('message', 'No message')
     commit_id = payload.get('head_commit', {}).get('id', 'unknown')[:7]
+
+    # Ignore commits that are from the log push itself (prevent infinite loop)
+    if commit_msg.startswith("Server reload successful"):
+        log_deployment(f"Ignoring self-generated commit: {commit_id}")
+        return jsonify({'status': 'ignored', 'reason': 'Log push commit'}), 200
 
     if ref not in ['refs/heads/master', 'refs/heads/main']:
         return jsonify({
@@ -186,7 +238,6 @@ def view_deployment_log():
         return "No deployment log found", 404
     except Exception as e:
         return f"Error reading log: {e}", 500
-
 
 @app.route('/')
 def home():

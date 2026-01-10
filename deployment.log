@@ -1,0 +1,19 @@
+[2026-01-10T23:05:48.549080] ============================================================
+[2026-01-10T23:05:48.553302] SERVER STARTED SUCCESSFULLY
+[2026-01-10T23:05:48.557211] Flask app initialized at 2026-01-10T23:05:48.556941
+[2026-01-10T23:05:48.561107] ============================================================
+[2026-01-10T23:06:31.340680] Webhook received: refs/heads/master - ebbea68 - Fix typo in city name for Ahmedabad in index.html
+[2026-01-10T23:06:31.728806] ✓ Git pull successful: Updating 829959c..ebbea68
+Fast-forward
+ templates/index.html | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+From https://github.com/tanishqmudaliar/Weather-Monitoring-System
+ * branch            master     -> FETCH_HEAD
+   829959c..ebbea68  master     -> origin/master
+[2026-01-10T23:06:33.388722] ✓ Dependencies installed
+[2026-01-10T23:06:33.392532] Webhook response sent, reload scheduled in 3 seconds...
+[2026-01-10T23:06:36.395607] Starting webapp reload...
+[2026-01-10T23:06:41.895351] ============================================================
+[2026-01-10T23:06:41.899014] SERVER STARTED SUCCESSFULLY
+[2026-01-10T23:06:41.901576] Flask app initialized at 2026-01-10T23:06:41.901300
+[2026-01-10T23:06:41.904766] ============================================================
