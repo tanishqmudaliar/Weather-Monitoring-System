@@ -1,4 +1,7 @@
 import os
+import subprocess
+import hmac
+import hashlib
 import requests
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -12,10 +15,104 @@ app = Flask(__name__)
 # Get API key from environment variables
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
 if not API_KEY:
-    raise ValueError("No OpenWeather API key found. Please set OPENWEATHER_API_KEY in .env file")
+    raise ValueError("No OpenWeather API key found. Please set OPENWEATHER_API_KEY in . env file")
 
 BASE_URL = "https://api.openweathermap.org/data/2.5"
+WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
+PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
+PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
+PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 
+@app.route('/github-webhook', methods=['POST'])
+def github_webhook():
+    """
+    Receives GitHub webhook, pulls latest code, and reloads the webapp.
+    Fully automated deployment on every push to master.
+    """
+
+    # Step 1: Verify webhook signature (security)
+    if WEBHOOK_SECRET:
+        signature = request.headers.get('X-Hub-Signature-256', '')
+        expected_sig = 'sha256=' + hmac.new(
+            WEBHOOK_SECRET.encode(),
+            request.data,
+            hashlib.sha256
+        ).hexdigest()
+
+        if not hmac.compare_digest(signature, expected_sig):
+            return jsonify({'error': 'Invalid signature'}), 403
+
+    # Step 2: Check if it's a push event
+    event = request.headers.get('X-GitHub-Event', '')
+
+    if event == 'ping':
+        # GitHub sends a ping when webhook is first set up
+        return jsonify({'status': 'pong', 'message': 'Webhook configured successfully! '}), 200
+
+    if event != 'push':
+        return jsonify({'status': 'ignored', 'reason': f'Event type:  {event}'}), 200
+
+    # Step 3: Parse payload and check branch
+    payload = request.get_json()
+    ref = payload.get('ref', '')
+
+    if ref not in ['refs/heads/master', 'refs/heads/main']:
+        return jsonify({
+            'status': 'ignored',
+            'reason': f'Push to {ref}, not master/main'
+        }), 200
+
+    # Step 4: Pull latest code from GitHub
+    try:
+        pull_result = subprocess.run(
+            ['git', 'pull', 'origin', 'master'],
+            cwd=PROJECT_PATH,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+
+        git_output = pull_result.stdout + pull_result.stderr
+
+    except subprocess.TimeoutExpired:
+        return jsonify({'error': 'Git pull timed out'}), 500
+    except Exception as e:
+        return jsonify({'error': f'Git pull failed: {str(e)}'}), 500
+
+    # Step 5: Install any new dependencies
+    try:
+        pip_result = subprocess.run(
+            ['pip', 'install', '-r', 'requirements.txt', '--user', '--quiet'],
+            cwd=PROJECT_PATH,
+            capture_output=True,
+            text=True,
+            timeout=120
+        )
+    except Exception as e:
+        # Non-fatal, continue anyway
+        pip_result = None
+
+    # Step 6: Reload the webapp via PythonAnywhere API
+    reload_status = "skipped"
+    if PYTHONANYWHERE_API_TOKEN:
+        try:
+            reload_response = requests.post(
+                f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}. pythonanywhere.com/reload/',
+                headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
+                timeout=30
+            )
+            reload_status = "success" if reload_response.ok else f"failed:  {reload_response.status_code}"
+        except Exception as e:
+            reload_status = f"error: {str(e)}"
+
+    # Step 7: Return success response
+    return jsonify({
+        'status': 'deployed',
+        'branch': ref,
+        'git_output': git_output,
+        'reload_status': reload_status,
+        'timestamp': datetime.now().isoformat()
+    }), 200
 
 @app.route('/')
 def home():
