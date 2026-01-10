@@ -17,3 +17,14 @@ From https://github.com/tanishqmudaliar/Weather-Monitoring-System
 [2026-01-10T23:06:41.899014] SERVER STARTED SUCCESSFULLY
 [2026-01-10T23:06:41.901576] Flask app initialized at 2026-01-10T23:06:41.901300
 [2026-01-10T23:06:41.904766] ============================================================
+[2026-01-10T23:25:53.898762] Webhook received: refs/heads/master - 5bb4077 - Add deployment log and missing files
+[2026-01-10T23:25:54.132787] ✓ Git pull successful: Already up to date.
+From https://github.com/tanishqmudaliar/Weather-Monitoring-System
+ * branch            master     -> FETCH_HEAD
+[2026-01-10T23:25:55.827925] ✓ Dependencies installed
+[2026-01-10T23:25:55.831784] Webhook response sent, reload scheduled in 3 seconds...
+[2026-01-10T23:25:58.834896] Starting webapp reload...
+[2026-01-10T23:26:05.144657] ============================================================
+[2026-01-10T23:26:05.148102] SERVER STARTED SUCCESSFULLY
+[2026-01-10T23:26:05.151488] Flask app initialized at 2026-01-10T23:26:05.151198
+[2026-01-10T23:26:05.154837] ============================================================
