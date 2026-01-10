@@ -4,120 +4,19 @@ on:
   push: 
     branches: [ master ]
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+jobs: 
+  deploy: 
+    runs-on:  ubuntu-latest
     
-    environment:  
+    environment:
       name:  Production
       url: https://tanishqmudaliar.pythonanywhere.com/
 
     steps:
-      - name: Checkout code
-        uses:  actions/checkout@v4
-
-      - name:  Deploy to PythonAnywhere
-        env:
-          PYTHONANYWHERE_USERNAME: ${{ secrets. PYTHONANYWHERE_USERNAME }}
-          PYTHONANYWHERE_API_TOKEN:  ${{ secrets. PYTHONANYWHERE_API_TOKEN }}
+      - name: Deployment Triggered
         run: |
-          set -e
-          
-          echo "🚀 Starting deployment process..."
-          
-          if [ -z "$PYTHONANYWHERE_USERNAME" ] || [ -z "$PYTHONANYWHERE_API_TOKEN" ]; then
-            echo "❌ ERROR:  Secrets not configured properly!"
-            exit 1
-          fi
-          
-          API_BASE="https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}"
-          AUTH_HEADER="Authorization: Token ${PYTHONANYWHERE_API_TOKEN}"
-          
-          # First, clean up any existing consoles (free tier limit is 2)
-          echo "🧹 Cleaning up old consoles..."
-          EXISTING_CONSOLES=$(curl -s "${API_BASE}/consoles/" -H "${AUTH_HEADER}")
-          echo "Existing consoles: $EXISTING_CONSOLES"
-          
-          # Extract and delete all console IDs
-          echo "$EXISTING_CONSOLES" | grep -o '"id":[0-9]*' | cut -d': ' -f2 | while read -r cid; do
-            if [ -n "$cid" ]; then
-              echo "Deleting console $cid..."
-              curl -s -X DELETE "${API_BASE}/consoles/${cid}/" -H "${AUTH_HEADER}" || true
-            fi
-          done
-          
-          sleep 2
-          
-          echo "📡 Creating console session..."
-          
-          # Create console with proper JSON
-          CONSOLE_RESPONSE=$(curl -s -X POST \
-            "${API_BASE}/consoles/" \
-            -H "${AUTH_HEADER}" \
-            -H "Content-Type: application/json" \
-            -d "{\"executable\": \"bash\",\"working_directory\":\"/home/${PYTHONANYWHERE_USERNAME}\"}")
-          
-          echo "📄 Console response: $CONSOLE_RESPONSE"
-          
-          # Check for error in response
-          if echo "$CONSOLE_RESPONSE" | grep -q '"error"'; then
-            echo "❌ API Error: $CONSOLE_RESPONSE"
-            exit 1
-          fi
-          
-          CONSOLE_ID=$(echo "$CONSOLE_RESPONSE" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
-          
-          if [ -z "$CONSOLE_ID" ]; then
-            echo "❌ Could not extract console ID from:  $CONSOLE_RESPONSE"
-            exit 1
-          fi
-          
-          echo "✅ Console created:  $CONSOLE_ID"
-          
-          # Wait for console to initialize
-          sleep 5
-          
-          # Run deployment commands
-          echo "📥 Pulling code and installing dependencies..."
-          curl -s -X POST \
-            "${API_BASE}/consoles/${CONSOLE_ID}/send_input/" \
-            -H "${AUTH_HEADER}" \
-            -H "Content-Type: application/json" \
-            -d "{\"input\":\"cd /home/${PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System && git pull origin master && pip install -r requirements.txt --user\\n\"}"
-          
-          # Wait for commands to complete
-          sleep 60
-          
-          # Get output for debugging
-          echo "📄 Fetching console output..."
-          curl -s "${API_BASE}/consoles/${CONSOLE_ID}/get_latest_output/" \
-            -H "${AUTH_HEADER}"
-          
+          echo "🚀 Push detected!"
+          echo "📡 GitHub webhook will handle deployment automatically"
+          echo "🌐 https://tanishqmudaliar.pythonanywhere.com/"
           echo ""
-          
-          # Clean up console
-          echo "🧹 Cleaning up console..."
-          curl -s -X DELETE "${API_BASE}/consoles/${CONSOLE_ID}/" \
-            -H "${AUTH_HEADER}" || true
-          
-          # Reload webapp
-          echo "🔄 Reloading webapp..."
-          RELOAD_RESPONSE=$(curl -s -X POST \
-            "${API_BASE}/webapps/${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/" \
-            -H "${AUTH_HEADER}")
-          
-          echo "Reload response: $RELOAD_RESPONSE"
-          
-          echo ""
-          echo "🎉 Deployment complete!"
-          echo "🌐 https://${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/"
-
-      - name:  Notify Status
-        if: always()
-        run: |
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "✅ Deployment successful!"
-          else
-            echo "❌ Deployment failed"
-            exit 1
-          fi
+          echo "✅ No action needed - webhook does the work!"
