@@ -1,6 +1,4 @@
 import os
-import sys
-import logging
 import subprocess
 import hmac
 import hashlib
@@ -14,24 +12,15 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.logger.setLevel(logging.INFO)
-handler = logging.StreamHandler(sys.stderr)
-handler.setLevel(logging.INFO)
-formatter = logging.Formatter('[%(asctime)s] %(levelname)s: %(message)s')
-handler.setFormatter(formatter)
-app.logger.addHandler(handler)
-
-# Log at startup to verify logging works
-app.logger.info("App starting - PA_TOKEN exists: %s, PA_USER: %s",
-                bool(os.getenv('PYTHONANYWHERE_API_TOKEN')),
-                os.getenv('PYTHONANYWHERE_USERNAME'))
-
 # Get API key from environment variables
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
+if not API_KEY:
+    raise ValueError("No OpenWeather API key found. Please set OPENWEATHER_API_KEY in . env file")
+
+BASE_URL = "https://api.openweathermap.org/data/2.5"
 WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
 PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
-BASE_URL = "https://api.openweathermap.org/data/2.5"
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 
 @app.route('/github-webhook', methods=['POST'])
@@ -40,11 +29,8 @@ def github_webhook():
     Receives GitHub webhook, pulls latest code, and reloads the webapp.
     Fully automated deployment on every push to master.
     """
-    app.logger.info("ENV CHECK - PA_TOKEN exists: %s, length: %s",
-                    bool(PYTHONANYWHERE_API_TOKEN),
-                    len(PYTHONANYWHERE_API_TOKEN) if PYTHONANYWHERE_API_TOKEN else 0)
-    app.logger.info("ENV CHECK - PA_USER: %s", PYTHONANYWHERE_USERNAME)
-    # Verify signature (unchanged)
+
+    # Step 1: Verify webhook signature (security)
     if WEBHOOK_SECRET:
         signature = request.headers.get('X-Hub-Signature-256', '')
         expected_sig = 'sha256=' + hmac.new(
@@ -52,86 +38,80 @@ def github_webhook():
             request.data,
             hashlib.sha256
         ).hexdigest()
+
         if not hmac.compare_digest(signature, expected_sig):
             return jsonify({'error': 'Invalid signature'}), 403
 
+    # Step 2: Check if it's a push event
     event = request.headers.get('X-GitHub-Event', '')
+
     if event == 'ping':
+        # GitHub sends a ping when webhook is first set up
         return jsonify({'status': 'pong', 'message': 'Webhook configured successfully! '}), 200
+
     if event != 'push':
         return jsonify({'status': 'ignored', 'reason': f'Event type:  {event}'}), 200
 
+    # Step 3: Parse payload and check branch
     payload = request.get_json()
     ref = payload.get('ref', '')
+
     if ref not in ['refs/heads/master', 'refs/heads/main']:
-        return jsonify({'status': 'ignored', 'reason': f'Push to {ref}, not master/main'}), 200
+        return jsonify({
+            'status': 'ignored',
+            'reason': f'Push to {ref}, not master/main'
+        }), 200
 
-    # Determine branch name from ref
-    branch = ref.split('/')[-1]
-
-    # Step 4: Pull latest code
+    # Step 4: Pull latest code from GitHub
     try:
         pull_result = subprocess.run(
-            ['git', 'pull', 'origin', branch],
+            ['git', 'pull', 'origin', 'master'],
             cwd=PROJECT_PATH,
             capture_output=True,
             text=True,
             timeout=60
         )
-        git_output = (pull_result.stdout or '') + (pull_result.stderr or '')
+
+        git_output = pull_result.stdout + pull_result.stderr
+
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'Git pull timed out'}), 500
     except Exception as e:
         return jsonify({'error': f'Git pull failed: {str(e)}'}), 500
 
-    # Step 5: Install dependencies (capture output; non-fatal)
+    # Step 5: Install any new dependencies
     try:
-        pip_proc = subprocess.run(
+        pip_result = subprocess.run(
             ['pip', 'install', '-r', 'requirements.txt', '--user', '--quiet'],
             cwd=PROJECT_PATH,
             capture_output=True,
             text=True,
             timeout=120
         )
-        pip_output = (pip_proc.stdout or '') + (pip_proc.stderr or '')
     except Exception as e:
-        pip_output = f'pip install failed or timed out: {str(e)}'
+        # Non-fatal, continue anyway
+        pip_result = None
 
-    # Step 6: Reload the webapp via PythonAnywhere API (improved logging)
+    # Step 6: Reload the webapp via PythonAnywhere API
     reload_status = "skipped"
-    if PYTHONANYWHERE_API_TOKEN and PYTHONANYWHERE_USERNAME:
-        domain = f"{PYTHONANYWHERE_USERNAME}.pythonanywhere.com"
-        url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{domain}/reload/'
-        app.logger.info("Attempting reload - URL: %s", url)
-        app.logger.info("Token (first 8 chars): %s...",
-                        PYTHONANYWHERE_API_TOKEN[:8] if PYTHONANYWHERE_API_TOKEN else "None")
-
+    if PYTHONANYWHERE_API_TOKEN:
         try:
             reload_response = requests.post(
-                url,
+                f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/',
                 headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
                 timeout=30
             )
-            app.logger.info("Reload response: status=%s, body=%s",
-                            reload_response.status_code,
-                            reload_response.text[:500])
-
-            if reload_response.ok:
-                reload_status = "success"
-            else:
-                reload_status = f"failed: {reload_response.status_code} - {reload_response.text[:500]}"
-        except requests.RequestException as e:
+            reload_status = "success" if reload_response.ok else f"failed:  {reload_response.status_code}"
+        except Exception as e:
             reload_status = f"error: {str(e)}"
-            app.logger.exception("Exception when calling PythonAnywhere API")
 
-    # Step 7: Return response
+    # Step 7: Return success response
     return jsonify({
         'status': 'deployed',
         'branch': ref,
         'git_output': git_output,
         'reload_status': reload_status,
-        'timestamp': datetime.now().isoformat(),
-        'pip_output': pip_output
+        'timestamp': datetime.now().isoformat()
     }), 200
 
 @app.route('/')
