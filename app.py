@@ -3,6 +3,8 @@ import subprocess
 import hmac
 import hashlib
 import requests
+import threading
+import time
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from dotenv import load_dotenv
@@ -12,19 +14,72 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Get API key from environment variablesg
+# Get API key from environment variables
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
 PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
+DEPLOYMENT_LOG = f"{PROJECT_PATH}/deployment.log"
+
+
+def log_deployment(message):
+    """Write deployment events to a persistent log file"""
+    try:
+        with open(DEPLOYMENT_LOG, 'a') as f:
+            timestamp = datetime.now().isoformat()
+            f.write(f"[{timestamp}] {message}\n")
+    except Exception as e:
+        print(f"Failed to write log: {e}")
+
+
+def reload_webapp_async(delay=10):
+    """
+    Reload the webapp after a delay, running in background thread.
+    This allows the webhook response to be sent before reload.
+    """
+
+    def do_reload():
+        time.sleep(delay)  # Wait for response to be sent
+
+        log_deployment("Starting webapp reload...")
+
+        if PYTHONANYWHERE_API_TOKEN:
+            try:
+                reload_response = requests.post(
+                    f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/',
+                    headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
+                    timeout=30
+                )
+
+                if reload_response.ok:
+                    log_deployment("✓ Reload API call successful - webapp should restart shortly")
+                else:
+                    log_deployment(f"✗ Reload API failed: HTTP {reload_response.status_code} - {reload_response.text}")
+
+            except Exception as e:
+                log_deployment(f"✗ Reload error: {str(e)}")
+        else:
+            log_deployment("✗ No PYTHONANYWHERE_API_TOKEN - cannot reload")
+
+    # Start reload in background thread
+    thread = threading.Thread(target=do_reload, daemon=True)
+    thread.start()
+
+
+# Log server startup
+log_deployment("=" * 60)
+log_deployment("SERVER STARTED SUCCESSFULLY")
+log_deployment(f"Flask app initialized at {datetime.now().isoformat()}")
+log_deployment("=" * 60)
+
 
 @app.route('/github-webhook', methods=['POST'])
 def github_webhook():
     """
-    Receives GitHub webhook, pulls latest code, and reloads the webapp.
-    Fully automated deployment on every push to master.
+    Receives GitHub webhook, pulls latest code, schedules reload.
+    Returns response BEFORE reload to avoid webhook timeout.
     """
 
     # Step 1: Verify webhook signature (security)
@@ -37,27 +92,32 @@ def github_webhook():
         ).hexdigest()
 
         if not hmac.compare_digest(signature, expected_sig):
+            log_deployment("✗ Webhook rejected: invalid signature")
             return jsonify({'error': 'Invalid signature'}), 403
 
     # Step 2: Check if it's a push event
     event = request.headers.get('X-GitHub-Event', '')
 
     if event == 'ping':
-        # GitHub sends a ping when webhook is first set up
-        return jsonify({'status': 'pong', 'message': 'Webhook configured successfully! '}), 200
+        log_deployment("Webhook ping received")
+        return jsonify({'status': 'pong', 'message': 'Webhook configured successfully!'}), 200
 
     if event != 'push':
-        return jsonify({'status': 'ignored', 'reason': f'Event type:  {event}'}), 200
+        return jsonify({'status': 'ignored', 'reason': f'Event type: {event}'}), 200
 
     # Step 3: Parse payload and check branch
     payload = request.get_json()
     ref = payload.get('ref', '')
+    commit_msg = payload.get('head_commit', {}).get('message', 'No message')
+    commit_id = payload.get('head_commit', {}).get('id', 'unknown')[:7]
 
     if ref not in ['refs/heads/master', 'refs/heads/main']:
         return jsonify({
             'status': 'ignored',
             'reason': f'Push to {ref}, not master/main'
         }), 200
+
+    log_deployment(f"Webhook received: {ref} - {commit_id} - {commit_msg}")
 
     # Step 4: Pull latest code from GitHub
     try:
@@ -71,9 +131,16 @@ def github_webhook():
 
         git_output = pull_result.stdout + pull_result.stderr
 
+        if pull_result.returncode == 0:
+            log_deployment(f"✓ Git pull successful: {git_output.strip()}")
+        else:
+            log_deployment(f"✗ Git pull failed: {git_output.strip()}")
+
     except subprocess.TimeoutExpired:
+        log_deployment("✗ Git pull timed out")
         return jsonify({'error': 'Git pull timed out'}), 500
     except Exception as e:
+        log_deployment(f"✗ Git pull error: {str(e)}")
         return jsonify({'error': f'Git pull failed: {str(e)}'}), 500
 
     # Step 5: Install any new dependencies
@@ -85,42 +152,57 @@ def github_webhook():
             text=True,
             timeout=120
         )
+        if pip_result.returncode == 0:
+            log_deployment("✓ Dependencies installed")
+        else:
+            log_deployment(f"! Pip install warning: {pip_result.stderr}")
     except Exception as e:
-        # Non-fatal, continue anyway
-        pip_result = None
+        log_deployment(f"! Pip install error (non-fatal): {str(e)}")
 
-    # Step 6: Reload the webapp via PythonAnywhere API
-    reload_status = "skipped"
-    if PYTHONANYWHERE_API_TOKEN:
-        try:
-            reload_response = requests.post(
-                f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/',
-                headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
-                timeout=30
-            )
-            reload_status = "success" if reload_response.ok else f"failed:  {reload_response.status_code}"
-        except Exception as e:
-            reload_status = f"error: {str(e)}"
+    # Step 6: Schedule reload in background (after response is sent)
+    reload_webapp_async(delay=3)
 
-    # Step 7: Return success response
+    log_deployment("Webhook response sent, reload scheduled in 3 seconds...")
+
+    # Step 7: Return success response IMMEDIATELY (before reload)
     return jsonify({
-        'status': 'deployed',
+        'status': 'deployment_started',
+        'message': 'Code pulled, reload scheduled',
         'branch': ref,
-        'git_output': git_output,
-        'reload_status': reload_status,
+        'commit': commit_id,
+        'reload_scheduled': True,
         'timestamp': datetime.now().isoformat()
     }), 200
 
+
+@app.route('/deployment-log')
+def view_deployment_log():
+    """View deployment log (for debugging)"""
+    try:
+        with open(DEPLOYMENT_LOG, 'r') as f:
+            logs = f.read()
+        return f"<pre>{logs}</pre>", 200
+    except FileNotFoundError:
+        return "No deployment log found", 404
+    except Exception as e:
+        return f"Error reading log: {e}", 500
+
+
 @app.route('/')
 def home():
+    """Render the main page"""
     return render_template('index.html')
+
 
 @app.route('/favicon.ico')
 def favicon():
+    """Serve the favicon"""
     return send_from_directory(app.static_folder, 'favicon.ico')
+
 
 @app.route('/get_weather', methods=['GET'])
 def get_weather():
+    """Fetch current weather data for a given city"""
     city = request.args.get('city')
 
     if not city:
@@ -134,7 +216,7 @@ def get_weather():
     }
 
     try:
-        response = requests.get(BASE_URL, params=params)
+        response = requests.get(f"{BASE_URL}/weather", params=params)
         data = response.json()
 
         if response.status_code == 200:
@@ -145,8 +227,10 @@ def get_weather():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route("/api/reverse-geocode")
 def reverse_geocode():
+    """Get city name from latitude and longitude using OpenWeatherMap Geocoding API"""
     lat = request.args.get("lat")
     lon = request.args.get("lon")
     if not (lat and lon):
@@ -173,6 +257,7 @@ def reverse_geocode():
 
 @app.route('/api/current-weather')
 def get_current_weather():
+    """Fetch current weather data for a given location"""
     location = request.args.get('location', '')
     if not location:
         return jsonify({"error": "Location parameter is required"}), 400
@@ -195,7 +280,7 @@ def get_current_weather():
         "wind_speed": data['wind']['speed'],
         "wind_direction": data['wind']['deg'],
         "clouds": data.get('clouds', {}).get('all', 0),
-        "visibility": data.get('visibility', 10000),  # Added visibility
+        "visibility": data.get('visibility', 10000),
         "timestamp": data['dt'],
         "sunrise": data['sys']['sunrise'],
         "sunset": data['sys']['sunset']
@@ -206,6 +291,7 @@ def get_current_weather():
 
 @app.route('/api/forecast')
 def get_forecast():
+    """Fetch 5-day weather forecast for a given location"""
     location = request.args.get('location', '')
 
     if not location:
