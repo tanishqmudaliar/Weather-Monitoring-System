@@ -21,7 +21,7 @@ jobs:
           PYTHONANYWHERE_USERNAME: ${{ secrets.PYTHONANYWHERE_USERNAME }}
           PYTHONANYWHERE_API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
         run: |
-          set -e  # Exit on any error
+          set -e
           
           echo "🚀 Starting deployment process..."
           echo "👤 Username: ${PYTHONANYWHERE_USERNAME}"
@@ -32,28 +32,61 @@ jobs:
             exit 1
           fi
           
+          # Function to send command and get output
+          send_command() {
+            local console_id=$1
+            local command=$2
+            local description=$3
+            
+            echo "📤 $description"
+            
+            # Send command
+            curl -s -X POST \
+              "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${console_id}/send_input/" \
+              -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d "{\"input\":\"${command}\\n\"}" > /dev/null
+            
+            # Wait for command to execute
+            sleep 10
+            
+            # Get output
+            local output=$(curl -s -X GET \
+              "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${console_id}/get_latest_output/" \
+              -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}")
+            
+            echo "📋 Output:"
+            echo "$output" | grep -o '"output":"[^"]*"' | cut -d'"' -f4 | sed 's/\\n/\n/g'
+            
+            # Check for common error indicators
+            if echo "$output" | grep -qi "error\|fatal\|failed\|permission denied"; then
+              echo "⚠️  Potential error detected in output"
+              return 1
+            fi
+            
+            return 0
+          }
+          
           echo "📡 Creating console session..."
           
-          # Create console - try without arguments field since it's causing issues
+          # Create console
           CONSOLE_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/" \
             -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
             -H "Content-Type: application/json" \
             -d '{"executable":"bash","working_directory":"/home/'${PYTHONANYWHERE_USERNAME}'"}')
           
-          # Get HTTP code from last line
           HTTP_CODE=$(echo "$CONSOLE_RESPONSE" | tail -n1)
           RESPONSE_BODY=$(echo "$CONSOLE_RESPONSE" | head -n-1)
           
           echo "📊 HTTP Code: $HTTP_CODE"
-          echo "📄 Response: $RESPONSE_BODY"
           
           if [ "$HTTP_CODE" != "201" ]; then
             echo "❌ Failed to create console"
+            echo "Response: $RESPONSE_BODY"
             exit 1
           fi
           
-          # Extract console ID
           CONSOLE_ID=$(echo "$RESPONSE_BODY" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
           
           if [ -z "$CONSOLE_ID" ]; then
@@ -62,29 +95,30 @@ jobs:
           fi
           
           echo "✅ Console created: $CONSOLE_ID"
+          sleep 3
+          
+          # Navigate to directory and check if it exists
+          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && pwd" "Checking directory..."
+          sleep 5
           
           # Pull latest code
-          echo "📥 Pulling code from GitHub..."
-          curl -s -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/send_input/" \
-            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"input":"cd Weather-Monitoring-System && git pull origin master\n"}' > /dev/null
+          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && git pull origin master" "Pulling latest code from GitHub..."
+          sleep 15
           
-          sleep 55
+          # Show git status
+          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && git log -1 --oneline" "Verifying git commit..."
+          sleep 5
           
           # Install dependencies
-          echo "📦 Installing dependencies..."
-          curl -s -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/send_input/" \
-            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"input":"cd Weather-Monitoring-System && pip install -r requirements.txt --user\n"}' > /dev/null
+          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && pip install -r requirements.txt --user 2>&1 | tail -20" "Installing dependencies..."
+          sleep 30
           
-          sleep 55
+          # Verify installation
+          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && pip list | grep -i flask" "Checking installed packages..."
+          sleep 5
           
           # Clean up console
-          echo "🧹 Cleaning up..."
+          echo "🧹 Cleaning up console..."
           curl -s -X DELETE \
             "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/" \
             -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" > /dev/null
@@ -96,17 +130,19 @@ jobs:
             -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}")
           
           RELOAD_CODE=$(echo "$RELOAD_RESPONSE" | tail -n1)
+          RELOAD_BODY=$(echo "$RELOAD_RESPONSE" | head -n-1)
           
           if [ "$RELOAD_CODE" = "200" ]; then
             echo "✅ Webapp reloaded successfully!"
           else
-            echo "⚠️  Reload returned: $RELOAD_CODE"
+            echo "⚠️  Reload returned code: $RELOAD_CODE"
+            echo "Response: $RELOAD_BODY"
           fi
           
           echo ""
           echo "🎉 Deployment complete!"
           echo "🌐 https://${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/"
-
+          
       - name: Notify Status
         if: always()
         run: |
