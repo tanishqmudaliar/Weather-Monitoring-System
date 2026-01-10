@@ -1,113 +1,118 @@
 name: Deploy to PythonAnywhere
 
-on:
-  push:
+on: 
+  push: 
     branches: [ master ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
-    environment: 
-      name: Production
+    environment:  
+      name:  Production
       url: https://tanishqmudaliar.pythonanywhere.com/
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses:  actions/checkout@v4
 
-      - name: Deploy to PythonAnywhere
+      - name:  Deploy to PythonAnywhere
         env:
-          PYTHONANYWHERE_USERNAME: ${{ secrets.PYTHONANYWHERE_USERNAME }}
-          PYTHONANYWHERE_API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
+          PYTHONANYWHERE_USERNAME: ${{ secrets. PYTHONANYWHERE_USERNAME }}
+          PYTHONANYWHERE_API_TOKEN:  ${{ secrets. PYTHONANYWHERE_API_TOKEN }}
         run: |
-          set -e  # Exit on any error
+          set -e
           
           echo "🚀 Starting deployment process..."
-          echo "👤 Username: ${PYTHONANYWHERE_USERNAME}"
           
-          # Check if secrets are set
           if [ -z "$PYTHONANYWHERE_USERNAME" ] || [ -z "$PYTHONANYWHERE_API_TOKEN" ]; then
-            echo "❌ ERROR: Secrets not configured properly!"
+            echo "❌ ERROR:  Secrets not configured properly!"
             exit 1
           fi
+          
+          API_BASE="https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}"
+          AUTH_HEADER="Authorization: Token ${PYTHONANYWHERE_API_TOKEN}"
+          
+          # First, clean up any existing consoles (free tier limit is 2)
+          echo "🧹 Cleaning up old consoles..."
+          EXISTING_CONSOLES=$(curl -s "${API_BASE}/consoles/" -H "${AUTH_HEADER}")
+          echo "Existing consoles: $EXISTING_CONSOLES"
+          
+          # Extract and delete all console IDs
+          echo "$EXISTING_CONSOLES" | grep -o '"id":[0-9]*' | cut -d': ' -f2 | while read -r cid; do
+            if [ -n "$cid" ]; then
+              echo "Deleting console $cid..."
+              curl -s -X DELETE "${API_BASE}/consoles/${cid}/" -H "${AUTH_HEADER}" || true
+            fi
+          done
+          
+          sleep 2
           
           echo "📡 Creating console session..."
           
-          # Create console - try without arguments field since it's causing issues
-          CONSOLE_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/" \
-            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
+          # Create console with proper JSON
+          CONSOLE_RESPONSE=$(curl -s -X POST \
+            "${API_BASE}/consoles/" \
+            -H "${AUTH_HEADER}" \
             -H "Content-Type: application/json" \
-            -d '{"executable":"bash","working_directory":"/home/'${PYTHONANYWHERE_USERNAME}'"}')
+            -d "{\"executable\": \"bash\",\"working_directory\":\"/home/${PYTHONANYWHERE_USERNAME}\"}")
           
-          # Get HTTP code from last line
-          HTTP_CODE=$(echo "$CONSOLE_RESPONSE" | tail -n1)
-          RESPONSE_BODY=$(echo "$CONSOLE_RESPONSE" | head -n-1)
+          echo "📄 Console response: $CONSOLE_RESPONSE"
           
-          echo "📊 HTTP Code: $HTTP_CODE"
-          echo "📄 Response: $RESPONSE_BODY"
-          
-          if [ "$HTTP_CODE" != "201" ]; then
-            echo "❌ Failed to create console"
+          # Check for error in response
+          if echo "$CONSOLE_RESPONSE" | grep -q '"error"'; then
+            echo "❌ API Error: $CONSOLE_RESPONSE"
             exit 1
           fi
           
-          # Extract console ID
-          CONSOLE_ID=$(echo "$RESPONSE_BODY" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+          CONSOLE_ID=$(echo "$CONSOLE_RESPONSE" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
           
           if [ -z "$CONSOLE_ID" ]; then
-            echo "❌ Could not extract console ID"
+            echo "❌ Could not extract console ID from:  $CONSOLE_RESPONSE"
             exit 1
           fi
           
-          echo "✅ Console created: $CONSOLE_ID"
+          echo "✅ Console created:  $CONSOLE_ID"
           
-          # Pull latest code
-          echo "📥 Pulling code from GitHub..."
+          # Wait for console to initialize
+          sleep 5
+          
+          # Run deployment commands
+          echo "📥 Pulling code and installing dependencies..."
           curl -s -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/send_input/" \
-            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
+            "${API_BASE}/consoles/${CONSOLE_ID}/send_input/" \
+            -H "${AUTH_HEADER}" \
             -H "Content-Type: application/json" \
-            -d '{"input":"cd Weather-Monitoring-System && git pull origin master\n"}' > /dev/null
+            -d "{\"input\":\"cd /home/${PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System && git pull origin master && pip install -r requirements.txt --user\\n\"}"
           
-          sleep 55
+          # Wait for commands to complete
+          sleep 60
           
-          # Install dependencies
-          echo "📦 Installing dependencies..."
-          curl -s -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/send_input/" \
-            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            -d '{"input":"cd Weather-Monitoring-System && pip install -r requirements.txt --user\n"}' > /dev/null
+          # Get output for debugging
+          echo "📄 Fetching console output..."
+          curl -s "${API_BASE}/consoles/${CONSOLE_ID}/get_latest_output/" \
+            -H "${AUTH_HEADER}"
           
-          sleep 55
+          echo ""
           
           # Clean up console
-          echo "🧹 Cleaning up..."
-          curl -s -X DELETE \
-            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/" \
-            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" > /dev/null
+          echo "🧹 Cleaning up console..."
+          curl -s -X DELETE "${API_BASE}/consoles/${CONSOLE_ID}/" \
+            -H "${AUTH_HEADER}" || true
           
           # Reload webapp
           echo "🔄 Reloading webapp..."
-          RELOAD_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/webapps/${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/" \
-            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}")
+          RELOAD_RESPONSE=$(curl -s -X POST \
+            "${API_BASE}/webapps/${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/" \
+            -H "${AUTH_HEADER}")
           
-          RELOAD_CODE=$(echo "$RELOAD_RESPONSE" | tail -n1)
-          
-          if [ "$RELOAD_CODE" = "200" ]; then
-            echo "✅ Webapp reloaded successfully!"
-          else
-            echo "⚠️  Reload returned: $RELOAD_CODE"
-          fi
+          echo "Reload response: $RELOAD_RESPONSE"
           
           echo ""
           echo "🎉 Deployment complete!"
           echo "🌐 https://${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/"
 
-      - name: Notify Status
+      - name:  Notify Status
         if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
