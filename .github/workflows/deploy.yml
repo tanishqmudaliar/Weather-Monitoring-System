@@ -1,20 +1,112 @@
-name: Deployment Status
+name: Deploy to PythonAnywhere
 
+# Trigger: This workflow runs automatically when code is pushed to the master branch
 on:
   push:
     branches: [ master ]
 
 jobs:
   deploy:
+    # Uses Ubuntu as the virtual machine to run these commands
     runs-on: ubuntu-latest
-    # This links the job to the Environment you just created
+    
+    # Links this deployment to GitHub's "Production" environment
+    # This creates deployment records visible in your repo's deployments tab
     environment: 
       name: Production
       url: https://tanishqmudaliar.pythonanywhere.com/
 
     steps:
+      # Step 1: Downloads your repository code into the GitHub Actions runner
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Notify GitHub of Deployment
-        run: echo "Deployment record created for PythonAnywhere"
+      # Step 2: Main deployment logic
+      - name: Deploy to PythonAnywhere
+        env:
+          # These secrets must be added to your GitHub repo settings
+          PYTHONANYWHERE_USERNAME: ${{ secrets.PYTHONANYWHERE_USERNAME }}
+          PYTHONANYWHERE_API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
+        run: |
+          echo "🚀 Starting deployment process..."
+          
+          # IMPORTANT: First, we need to pull the latest code on PythonAnywhere
+          # PythonAnywhere requires SSH or API console access to run git commands
+          
+          # Create a bash console on PythonAnywhere to execute commands
+          echo "📡 Creating console session on PythonAnywhere..."
+          CONSOLE_RESPONSE=$(curl -s -X POST \
+            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/" \
+            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "executable": "bash",
+              "arguments": [],
+              "working_directory": "/home/'${PYTHONANYWHERE_USERNAME}'"
+            }')
+          
+          # Extract the console ID from the API response
+          # This ID is needed to send commands to the console
+          CONSOLE_ID=$(echo $CONSOLE_RESPONSE | grep -oP '"id":\s*\K[0-9]+')
+          
+          if [ -z "$CONSOLE_ID" ]; then
+            echo "❌ Failed to create console. Response: $CONSOLE_RESPONSE"
+            exit 1
+          fi
+          
+          echo "✅ Console created with ID: $CONSOLE_ID"
+          
+          # Navigate to your project directory and pull latest code from GitHub
+          echo "📥 Pulling latest code from GitHub..."
+          curl -s -X POST \
+            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/send_input/" \
+            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"input": "cd Weather-Monitoring-System && git pull origin master\n"}'
+          
+          # Wait for git pull to complete (adjust time if needed)
+          sleep 8
+          
+          # Install or update Python dependencies
+          echo "📦 Installing dependencies..."
+          curl -s -X POST \
+            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/send_input/" \
+            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"input": "cd Weather-Monitoring-System && pip install -r requirements.txt --user\n"}'
+          
+          # Wait for pip install to complete
+          sleep 12
+          
+          # Kill the console (cleanup)
+          echo "🧹 Cleaning up console..."
+          curl -s -X DELETE \
+            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/" \
+            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}"
+          
+          # Reload the web app to apply changes
+          # This restarts your Flask application with the new code
+          echo "🔄 Reloading web application..."
+          RELOAD_RESPONSE=$(curl -s -X POST \
+            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/webapps/${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/" \
+            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}")
+          
+          if echo "$RELOAD_RESPONSE" | grep -q "status"; then
+            echo "✅ Web app reloaded successfully!"
+          else
+            echo "⚠️  Reload response: $RELOAD_RESPONSE"
+          fi
+          
+          echo "🎉 Deployment completed!"
+
+      # Step 3: Show deployment status (runs regardless of success/failure)
+      - name: Notify Deployment Status
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Successfully deployed to PythonAnywhere"
+            echo "🌐 Live at: https://tanishqmudaliar.pythonanywhere.com/"
+          else
+            echo "❌ Deployment failed - check the logs above"
+            exit 1
+          fi
