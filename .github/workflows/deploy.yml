@@ -2,148 +2,110 @@ name: Deploy to PythonAnywhere
 
 on:
   push:
-    branches: [ master ]
+    branches:  [ master ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
-    environment: 
-      name: Production
+    environment:  
+      name:  Production
       url: https://tanishqmudaliar.pythonanywhere.com/
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to PythonAnywhere
+      - name:  Deploy to PythonAnywhere
         env:
-          PYTHONANYWHERE_USERNAME: ${{ secrets.PYTHONANYWHERE_USERNAME }}
-          PYTHONANYWHERE_API_TOKEN: ${{ secrets.PYTHONANYWHERE_API_TOKEN }}
+          PYTHONANYWHERE_USERNAME: ${{ secrets. PYTHONANYWHERE_USERNAME }}
+          PYTHONANYWHERE_API_TOKEN:  ${{ secrets. PYTHONANYWHERE_API_TOKEN }}
         run: |
           set -e
           
           echo "🚀 Starting deployment process..."
-          echo "👤 Username: ${PYTHONANYWHERE_USERNAME}"
           
-          # Check if secrets are set
           if [ -z "$PYTHONANYWHERE_USERNAME" ] || [ -z "$PYTHONANYWHERE_API_TOKEN" ]; then
-            echo "❌ ERROR: Secrets not configured properly!"
+            echo "❌ ERROR:  Secrets not configured properly!"
             exit 1
           fi
           
-          # Function to send command and get output
-          send_command() {
-            local console_id=$1
-            local command=$2
-            local description=$3
-            
-            echo "📤 $description"
-            
-            # Send command
-            curl -s -X POST \
-              "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${console_id}/send_input/" \
-              -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
-              -H "Content-Type: application/json" \
-              -d "{\"input\":\"${command}\\n\"}" > /dev/null
-            
-            # Wait for command to execute
-            sleep 10
-            
-            # Get output
-            local output=$(curl -s -X GET \
-              "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${console_id}/get_latest_output/" \
-              -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}")
-            
-            echo "📋 Output:"
-            echo "$output" | grep -o '"output":"[^"]*"' | cut -d'"' -f4 | sed 's/\\n/\n/g'
-            
-            # Check for common error indicators
-            if echo "$output" | grep -qi "error\|fatal\|failed\|permission denied"; then
-              echo "⚠️  Potential error detected in output"
-              return 1
-            fi
-            
-            return 0
-          }
+          # Use the FILES API to check current state first
+          echo "📂 Checking current deployment..."
+          FILES_CHECK=$(curl -s -w "\n%{http_code}" \
+            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/files/path/home/${PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System/" \
+            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}")
           
+          FILES_CODE=$(echo "$FILES_CHECK" | tail -n1)
+          echo "📊 Files API response: $FILES_CODE"
+          
+          # Create console with a small delay for initialization
           echo "📡 Creating console session..."
-          
-          # Create console
           CONSOLE_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
-            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/" \
+            "https://www.pythonanywhere. com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/" \
             -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
-            -H "Content-Type: application/json" \
+            -H "Content-Type:  application/json" \
             -d '{"executable":"bash","working_directory":"/home/'${PYTHONANYWHERE_USERNAME}'"}')
           
           HTTP_CODE=$(echo "$CONSOLE_RESPONSE" | tail -n1)
           RESPONSE_BODY=$(echo "$CONSOLE_RESPONSE" | head -n-1)
           
-          echo "📊 HTTP Code: $HTTP_CODE"
-          
           if [ "$HTTP_CODE" != "201" ]; then
-            echo "❌ Failed to create console"
-            echo "Response: $RESPONSE_BODY"
+            echo "❌ Failed to create console:  $RESPONSE_BODY"
             exit 1
           fi
           
-          CONSOLE_ID=$(echo "$RESPONSE_BODY" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+          CONSOLE_ID=$(echo "$RESPONSE_BODY" | grep -o '"id":[0-9]*' | head -1 | cut -d': ' -f2)
+          echo "✅ Console created:  $CONSOLE_ID"
           
-          if [ -z "$CONSOLE_ID" ]; then
-            echo "❌ Could not extract console ID"
-            exit 1
-          fi
-          
-          echo "✅ Console created: $CONSOLE_ID"
-          sleep 3
-          
-          # Navigate to directory and check if it exists
-          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && pwd" "Checking directory..."
+          # Wait for console to be ready
+          echo "⏳ Waiting for console to initialize..."
           sleep 5
           
-          # Pull latest code
-          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && git pull origin master" "Pulling latest code from GitHub..."
-          sleep 15
+          # Send all commands in one go with proper error handling and output
+          echo "📥 Executing deployment commands..."
+          curl -s -X POST \
+            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/send_input/" \
+            -H "Authorization:  Token ${PYTHONANYWHERE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"input":"cd /home/'${PYTHONANYWHERE_USERNAME}'/Weather-Monitoring-System && echo \"Current commit: $(git rev-parse HEAD)\" && git fetch origin master && git reset --hard origin/master && echo \"New commit: $(git rev-parse HEAD)\" && pip install -r requirements. txt --user && echo \"DEPLOYMENT_COMPLETE\"\n"}'
           
-          # Show git status
-          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && git log -1 --oneline" "Verifying git commit..."
-          sleep 5
+          # Wait and poll for output
+          echo "⏳ Waiting for commands to complete..."
+          sleep 60
           
-          # Install dependencies
-          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && pip install -r requirements.txt --user 2>&1 | tail -20" "Installing dependencies..."
-          sleep 30
+          # Get console output to verify
+          echo "📄 Fetching console output..."
+          OUTPUT=$(curl -s \
+            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/get_latest_output/" \
+            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}")
           
-          # Verify installation
-          send_command "$CONSOLE_ID" "cd Weather-Monitoring-System && pip list | grep -i flask" "Checking installed packages..."
-          sleep 5
+          echo "Console output: $OUTPUT"
           
           # Clean up console
-          echo "🧹 Cleaning up console..."
+          echo "🧹 Cleaning up..."
           curl -s -X DELETE \
-            "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/" \
+            "https://www.pythonanywhere. com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/" \
             -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" > /dev/null
           
           # Reload webapp
           echo "🔄 Reloading webapp..."
           RELOAD_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
             "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/webapps/${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/" \
-            -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}")
+            -H "Authorization:  Token ${PYTHONANYWHERE_API_TOKEN}")
           
           RELOAD_CODE=$(echo "$RELOAD_RESPONSE" | tail -n1)
-          RELOAD_BODY=$(echo "$RELOAD_RESPONSE" | head -n-1)
           
           if [ "$RELOAD_CODE" = "200" ]; then
             echo "✅ Webapp reloaded successfully!"
           else
-            echo "⚠️  Reload returned code: $RELOAD_CODE"
-            echo "Response: $RELOAD_BODY"
+            echo "⚠️  Reload returned: $RELOAD_CODE"
           fi
           
-          echo ""
           echo "🎉 Deployment complete!"
           echo "🌐 https://${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/"
-          
-      - name: Notify Status
+
+      - name:  Notify Status
         if: always()
         run: |
           if [ "${{ job.status }}" == "success" ]; then
