@@ -29,8 +29,7 @@ def github_webhook():
     Receives GitHub webhook, pulls latest code, and reloads the webapp.
     Fully automated deployment on every push to master.
     """
-
-    # Step 1: Verify webhook signature (security)
+    # Verify signature (unchanged)
     if WEBHOOK_SECRET:
         signature = request.headers.get('X-Hub-Signature-256', '')
         expected_sig = 'sha256=' + hmac.new(
@@ -38,89 +37,85 @@ def github_webhook():
             request.data,
             hashlib.sha256
         ).hexdigest()
-
         if not hmac.compare_digest(signature, expected_sig):
             return jsonify({'error': 'Invalid signature'}), 403
 
-    # Step 2: Check if it's a push event
     event = request.headers.get('X-GitHub-Event', '')
-
     if event == 'ping':
-        # GitHub sends a ping when webhook is first set up
         return jsonify({'status': 'pong', 'message': 'Webhook configured successfully! '}), 200
-
     if event != 'push':
         return jsonify({'status': 'ignored', 'reason': f'Event type:  {event}'}), 200
 
-    # Step 3: Parse payload and check branch
     payload = request.get_json()
     ref = payload.get('ref', '')
-
     if ref not in ['refs/heads/master', 'refs/heads/main']:
-        return jsonify({
-            'status': 'ignored',
-            'reason': f'Push to {ref}, not master/main'
-        }), 200
+        return jsonify({'status': 'ignored', 'reason': f'Push to {ref}, not master/main'}), 200
 
-    # Step 4: Pull latest code from GitHub
+    # Determine branch name from ref
+    branch = ref.split('/')[-1]
+
+    # Step 4: Pull latest code
     try:
         pull_result = subprocess.run(
-            ['git', 'pull', 'origin', 'master'],
+            ['git', 'pull', 'origin', branch],
             cwd=PROJECT_PATH,
             capture_output=True,
             text=True,
             timeout=60
         )
-
-        git_output = pull_result.stdout + pull_result.stderr
-
+        git_output = (pull_result.stdout or '') + (pull_result.stderr or '')
     except subprocess.TimeoutExpired:
         return jsonify({'error': 'Git pull timed out'}), 500
     except Exception as e:
         return jsonify({'error': f'Git pull failed: {str(e)}'}), 500
 
-    # Step 5: Install any new dependencies
+    # Step 5: Install dependencies (capture output; non-fatal)
     try:
-        pip_result = subprocess.run(
+        pip_proc = subprocess.run(
             ['pip', 'install', '-r', 'requirements.txt', '--user', '--quiet'],
             cwd=PROJECT_PATH,
             capture_output=True,
             text=True,
             timeout=120
         )
-    except Exception:
-        # Non-fatal, continue anyway
-        pip_result = None
+        pip_output = (pip_proc.stdout or '') + (pip_proc.stderr or '')
+    except Exception as e:
+        pip_output = f'pip install failed or timed out: {str(e)}'
 
     # Step 6: Reload the webapp via PythonAnywhere API (improved logging)
-        reload_status = "skipped"
-        if PYTHONANYWHERE_API_TOKEN and PYTHONANYWHERE_USERNAME:
+    reload_status = "skipped"
+    if PYTHONANYWHERE_API_TOKEN and PYTHONANYWHERE_USERNAME:
+        try:
+            url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/'
+            reload_response = requests.post(
+                url,
+                headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
+                timeout=30
+            )
+            resp_text = (reload_response.text or "").strip()
+            # Try to include JSON body if available for clearer logs
             try:
-                url = f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/'
-                reload_response = requests.post(
-                    url,
-                    headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
-                    timeout=30
-                )
-                resp_text = (reload_response.text or "").strip()
-                if reload_response.ok:
-                    reload_status = "success"
-                else:
-                    # include status code and a trimmed response body for debugging
-                    reload_status = f"failed: {reload_response.status_code} - {resp_text[:500]}"
-                    app.logger.error("PA reload failed (%s): %s", reload_response.status_code, resp_text)
-            except requests.RequestException as e:
-                reload_status = f"error: {str(e)}"
-                app.logger.exception("Exception when calling PythonAnywhere API")
+                resp_body = reload_response.json()
+            except Exception:
+                resp_body = resp_text
 
-    # Step 7: Return success response
+            if reload_response.ok:
+                reload_status = "success"
+            else:
+                reload_status = f"failed: {reload_response.status_code} - {str(resp_body)[:1000]}"
+                app.logger.error("PythonAnywhere reload failed (%s): %s", reload_response.status_code, resp_text)
+        except requests.RequestException as e:
+            reload_status = f"error: {str(e)}"
+            app.logger.exception("Exception when calling PythonAnywhere API")
+
+    # Step 7: Return response
     return jsonify({
         'status': 'deployed',
         'branch': ref,
         'git_output': git_output,
         'reload_status': reload_status,
         'timestamp': datetime.now().isoformat(),
-        'pip_output': pip_result
+        'pip_output': pip_output
     }), 200
 
 @app.route('/')
