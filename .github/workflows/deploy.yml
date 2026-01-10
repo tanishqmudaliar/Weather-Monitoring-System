@@ -45,20 +45,24 @@ jobs:
           # Create a bash console on PythonAnywhere to execute commands
           echo "📡 Creating console session on PythonAnywhere..."
           
-          # Create JSON payload properly - the key is to use jq or proper escaping
-          # We'll use a here-document to avoid shell interpretation issues
+          # Create JSON payload in a variable first to avoid shell interpretation
+          # This ensures proper JSON formatting
+          JSON_PAYLOAD=$(cat <<-END
+          {
+            "executable": "bash",
+            "arguments": [],
+            "working_directory": "/home/${PYTHONANYWHERE_USERNAME}"
+          }
+          END
+          )
+          
+          echo "📤 Sending request to PythonAnywhere API..."
+          
           CONSOLE_RESPONSE=$(curl -s -w "\nHTTP_CODE:%{http_code}" -X POST \
             "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/" \
             -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}" \
             -H "Content-Type: application/json" \
-            --data-binary @- << EOF
-            {
-              "executable": "bash",
-              "arguments": [],
-              "working_directory": "/home/${PYTHONANYWHERE_USERNAME}"
-            }
-            EOF
-            )
+            -d "$JSON_PAYLOAD")
           
           # Extract HTTP status code
           HTTP_CODE=$(echo "$CONSOLE_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d':' -f2)
@@ -99,7 +103,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"input": "cd Weather-Monitoring-System && git pull origin master\n"}')
           
-          echo "Git pull initiated"
+          echo "✅ Git pull command sent"
           
           # Wait for git pull to complete
           echo "⏳ Waiting for git pull to complete..."
@@ -113,7 +117,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"input": "cd Weather-Monitoring-System && pip install -r requirements.txt --user\n"}')
           
-          echo "Pip install initiated"
+          echo "✅ Pip install command sent"
           
           # Wait for pip install to complete
           echo "⏳ Waiting for pip install to complete..."
@@ -125,7 +129,7 @@ jobs:
             "https://www.pythonanywhere.com/api/v0/user/${PYTHONANYWHERE_USERNAME}/consoles/${CONSOLE_ID}/" \
             -H "Authorization: Token ${PYTHONANYWHERE_API_TOKEN}"
           
-          echo "Console cleaned up"
+          echo "✅ Console cleaned up"
           
           # Reload the web app to apply changes
           echo "🔄 Reloading web application..."
@@ -146,7 +150,7 @@ jobs:
           fi
           
           echo ""
-          echo "🎉 Deployment completed!"
+          echo "🎉 Deployment completed successfully!"
           echo "🌐 Your app should be live at: https://${PYTHONANYWHERE_USERNAME}.pythonanywhere.com/"
 
       # Step 3: Show deployment status (runs regardless of success/failure)
