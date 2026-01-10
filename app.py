@@ -97,7 +97,7 @@ def github_webhook():
     if PYTHONANYWHERE_API_TOKEN:
         try:
             reload_response = requests.post(
-                f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}. pythonanywhere.com/reload/',
+                f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/',
                 headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
                 timeout=30
             )
