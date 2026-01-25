@@ -11,23 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Check if commit should trigger deployment
-        id: check_commit
-        run: |
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
-          echo "Commit message: $COMMIT_MSG"
-          
-          # Skip deployment if commit message starts with [LOGS]
-          if [[ "$COMMIT_MSG" == "[LOGS]"* ]]; then
-            echo "skip=true" >> $GITHUB_OUTPUT
-            echo "Skipping deployment - this is a log commit"
-          else
-            echo "skip=false" >> $GITHUB_OUTPUT
-            echo "Proceeding with deployment"
-          fi
-      
       - name: Trigger PythonAnywhere Deployment
-        if: steps.check_commit.outputs.skip == 'false'
         run: |
           RESPONSE=$(curl -X POST \
             -H "Content-Type: application/json" \
@@ -54,7 +38,3 @@ jobs:
           else
             echo "⚠ Deployment may have issues - check logs"
           fi
-      
-      - name: Skip deployment
-        if: steps.check_commit.outputs.skip == 'true'
-        run: echo "Deployment skipped - log commit detected"
