@@ -64,8 +64,8 @@ The project implements a fully automated CI/CD pipeline—every push to `master`
 - **Modern UI**: Clean interface with Font Awesome icons
 
 ### DevOps
-- Zero-downtime automated deployment via GitHub webhooks
-- Deployment logging with Git-backed audit trail
+- Zero-downtime automated deployment via GitHub Actions
+- Deployment logging viewable at `/deployment-log`
 - Auto-renewal integration for free-tier hosting
 
 ---
@@ -77,7 +77,7 @@ The project implements a fully automated CI/CD pipeline—every push to `master`
 | **Backend** | Python 3.14, Flask 3.0.0 |
 | **Frontend** | HTML5, CSS3, JavaScript (ES6+), Chart.js |
 | **APIs** | OpenWeatherMap, Open-Meteo (UV Index) |
-| **Deployment** | PythonAnywhere, GitHub Webhooks |
+| **Deployment** | PythonAnywhere |
 | **CI/CD** | GitHub Actions |
 
 ---
@@ -89,42 +89,42 @@ The project implements a fully automated CI/CD pipeline—every push to `master`
 │                    FULLY AUTOMATED PYTHONANYWHERE HOSTING                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
 │  │                              GITHUB                                  │   │
 │  │                                                                      │   │
-│  │   ┌─────────────────────────────┐  ┌─────────────────────────────┐  │   │
-│  │   │  Weather-Monitoring-System  │  │  PythonAnywhere-Auto-Renew  │  │   │
-│  │   │                             │  │                             │  │   │
-│  │   │  • Main application code   │  │  • Renewal bot              │  │   │
-│  │   │  • Webhook endpoint        │  │  • Runs 1st & 15th monthly  │  │   │
-│  │   │  • Auto-deploys on push    │  │  • Keeps app alive forever  │  │   │
-│  │   └──────────────┬──────────────┘  └──────────────┬──────────────┘  │   │
-│  │                  │                                │                  │   │
-│  │                  │ Webhook                        │ GitHub Actions   │   │
+│  │   ┌─────────────────────────────┐  ┌─────────────────────────────┐   │   │
+│  │   │  Weather-Monitoring-System  │  │  PythonAnywhere-Auto-Renew  │   │   │
+│  │   │                             │  │                             │   │   │
+│  │   │  • Main application code    │  │  • Renewal bot              │   │   │
+│  │   │  • Deployment endpoint      │  │  • Runs 1st & 15th monthly  │   │   │
+│  │   │  • Auto-deploys on push     │  │  • Keeps app alive forever  │   │   │
+│  │   └──────────────┬──────────────┘  └──────────────┬──────────────┘   │   │
+│  │                  │ POST request                   │ Github           │   │
+│  │                  │ (/github-webhook)              │ Actions          │   │
 │  │                  ▼                                ▼                  │   │
 │  └──────────────────┼────────────────────────────────┼──────────────────┘   │
 │                     │                                │                      │
 │  ┌──────────────────▼────────────────────────────────▼──────────────────┐   │
-│  │                         PYTHONANYWHERE                                │   │
-│  │                                                                       │   │
-│  │   ┌─────────────────────────┐    ┌─────────────────────────┐         │   │
-│  │   │    Webhook Receiver     │    │     Auto-Renewal        │         │   │
-│  │   │  • git pull             │    │  • Extends app expiry   │         │   │
-│  │   │  • pip install          │    │  • Prevents shutdown    │         │   │
-│  │   │  • Reload webapp        │    │  • Zero maintenance     │         │   │
-│  │   └─────────────────────────┘    └─────────────────────────┘         │   │
-│  │                                                                       │   │
-│  │            https://tanishqmudaliar.pythonanywhere.com                │   │
-│  └───────────────────────────────────────────────────────────────────────┘   │
+│  │                            PYTHONANYWHERE                            │   │
+│  │                                                                      │   │
+│  │      ┌─────────────────────────┐    ┌─────────────────────────┐      │   │
+│  │      │   Deployment Endpoint   │    │     Auto-Renewal        │      │   │
+│  │      │  • git pull             │    │  • Extends app expiry   │      │   │
+│  │      │  • pip install          │    │  • Prevents shutdown    │      │   │
+│  │      │  • Reload webapp        │    │  • Zero maintenance     │      │   │
+│  │      └─────────────────────────┘    └─────────────────────────┘      │   │
+│  │                                                                      │   │
+│  │              https://tanishqmudaliar.pythonanywhere.com              │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
 │                                                                             │
-│           Push code → Instantly live → Stays alive forever                  │
+│               Push code → Instantly live → Stays alive forever              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Deployment Flow
 
-1. Push code to `master` branch
-2. GitHub sends webhook POST to `/github-webhook`
+1. Push code to `master` or `main` branch
+2. GitHub Actions workflow sends POST request to `/github-webhook` endpoint
 3. Flask endpoint pulls latest code via `git pull`
 4. Dependencies are installed with `pip install -r requirements.txt`
 5. PythonAnywhere API reloads the webapp
@@ -196,17 +196,35 @@ The project implements a fully automated CI/CD pipeline—every push to `master`
    PYTHONANYWHERE_USERNAME=your_username
    ```
 
-#### Step 2: Configure GitHub Webhook
+#### Step 2: Configure WSGI File
 
-1. Go to your repository → **Settings** → **Webhooks** → **Add webhook**
-2. Configure:
-   - **Payload URL**: `https://yourusername.pythonanywhere.com/github-webhook`
-   - **Content type**: `application/json`
-   - **Secret**: Same as `GITHUB_WEBHOOK_SECRET` in your `.env`
-   - **Events**: Just the push event
-3. Save the webhook
+Edit your WSGI configuration file (e.g., `/var/www/yourusername_pythonanywhere_com_wsgi.py`):
+```python
+import sys
+import os
+from dotenv import load_dotenv
 
-#### Step 3: Keep Your App Alive
+# Add your project directory to the sys.path
+project_home = '/home/yourusername/Weather-Monitoring-System'
+if project_home not in sys.path:
+    sys.path = [project_home] + sys.path
+
+# Load environment variables
+load_dotenv(os.path.join(project_home, '.env'))
+
+# Import your Flask app
+from app import app as application
+```
+
+#### Step 3: Configure GitHub Actions Secrets
+
+Add these secrets to your GitHub repository (Settings → Secrets and variables → Actions):
+- `WEBHOOK_SECRET`: Same as `GITHUB_WEBHOOK_SECRET` in your `.env`
+- `PYTHONANYWHERE_WEBHOOK_URL`: `https://yourusername.pythonanywhere.com/github-webhook`
+
+Every push to `master` or `main` will trigger the GitHub Actions workflow which sends a POST request to your deployment endpoint.
+
+#### Step 4: Keep Your App Alive
 
 Set up [PythonAnywhere-Auto-Renew](https://github.com/tanishqmudaliar/PythonAnywhere-Auto-Renew) to prevent your free tier app from expiring every 90 days.
 
@@ -228,7 +246,7 @@ Set up [PythonAnywhere-Auto-Renew](https://github.com/tanishqmudaliar/PythonAnyw
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/github-webhook` | POST | Receives GitHub webhook, pulls code, reloads app |
+| `/github-webhook` | POST | Receives deployment request from GitHub Actions, pulls code, reloads app |
 | `/deployment-log` | GET | View deployment log (debugging) |
 
 ### Example Request
@@ -241,16 +259,27 @@ curl "https://tanishqmudaliar.pythonanywhere.com/api/current-weather?location=Mu
 
 ```json
 {
-  "location": "Mumbai, IN",
-  "temperature": 28.5,
-  "feels_like": 32.1,
-  "description": "Partly Cloudy",
-  "humidity": 78,
-  "pressure": 1012,
-  "wind_speed": 3.5,
-  "uv_index": 6.2,
-  "sunrise": 1706150400,
-  "sunset": 1706191200
+   "clouds":0,
+   "description":"Haze",
+   "feels_like":25.99,
+   "humidity":65,
+   "icon":"50n",
+   "location":"Mumbai, IN",
+   "pressure":1014,
+   "rain_1h":0,
+   "snow_1h":0,
+   "sunrise":1769305456,
+   "sunset":1769345828,
+   "temp_max":25.99,
+   "temp_min":25.99,
+   "temperature":25.99,
+   "timestamp":1769351532,
+   "timezone":19800,
+   "uv_index":0.0,
+   "visibility":2500,
+   "wind_direction":300,
+   "wind_gust":2.57,
+   "wind_speed":2.57
 }
 ```
 
@@ -354,9 +383,9 @@ OPENWEATHER_API_KEY=your_actual_api_key
 - Use HTTPS or localhost
 - Check browser console for errors
 
-### Webhook Not Triggering Deployment
-- Verify webhook secret matches in GitHub and `.env`
-- Check webhook delivery status in GitHub Settings → Webhooks
+### Deployment Not Triggering
+- Verify GitHub Actions secrets (`WEBHOOK_SECRET`, `PYTHONANYWHERE_WEBHOOK_URL`) are set correctly
+- Check GitHub Actions workflow runs in the Actions tab
 - Ensure PythonAnywhere API token is valid
 - Review deployment logs at `/deployment-log`
 

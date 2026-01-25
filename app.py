@@ -27,6 +27,8 @@ BASE_URL = "https://api.openweathermap.org/data/2.5"
 def log_deployment(message):
     """Write deployment events to log file"""
     try:
+        # Create logs directory if it doesn't exist
+        os.makedirs(os.path.dirname(DEPLOYMENT_LOG), exist_ok=True)
         with open(DEPLOYMENT_LOG, 'a') as f:
             timestamp = datetime.now().isoformat()
             f.write(f"[{timestamp}] {message}\n")
