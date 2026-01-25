@@ -3,6 +3,7 @@ let currentUnit = "metric";
 let lastLocation = "";
 let forecastChart = null;
 let currentWeatherData = null;
+let currentTimezoneOffset = 0; // Store city timezone offset
 
 // DOM Elements
 const locationInput = document.getElementById("location-input");
@@ -18,8 +19,7 @@ const emptyState = document.getElementById("empty-state");
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
     setupEventListeners();
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 1000);
+    setInterval(() => updateCurrentTime(currentTimezoneOffset), 1000);
     if (emptyState) emptyState.style.display = "block";
 });
 
@@ -239,7 +239,7 @@ function displayCurrentWeather(data) {
 
     // Temperature
     const tempC = parseFloat(data.temperature);
-    const tempF = (tempC * 9/5) + 32;
+    const tempF = (tempC * 9 / 5) + 32;
     const currentTemp = document.getElementById("current-temp");
     if (currentTemp) {
         currentTemp.textContent = currentUnit === "metric" ? tempC.toFixed(1) : tempF.toFixed(1);
@@ -247,7 +247,7 @@ function displayCurrentWeather(data) {
 
     // Feels Like
     const feelsC = parseFloat(data.feels_like);
-    const feelsF = (feelsC * 9/5) + 32;
+    const feelsF = (feelsC * 9 / 5) + 32;
     const feelsLike = document.getElementById("feels-like");
     if (feelsLike) {
         feelsLike.textContent = currentUnit === "metric" ? feelsC.toFixed(1) : feelsF.toFixed(1);
@@ -268,6 +268,21 @@ function displayCurrentWeather(data) {
     updateStat("visibility", `${(data.visibility / 1000).toFixed(1)} km`);
     updateStat("clouds", `${data.clouds}%`);
 
+    // Wind Direction with compass
+    const windDeg = data.wind_direction || 0;
+    const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const dirIndex = Math.round(windDeg / 45) % 8;
+    updateStat("wind-direction", `${directions[dirIndex]} ${windDeg}°`);
+
+    // High/Low Temperature
+    const minC = parseFloat(data.temp_min);
+    const maxC = parseFloat(data.temp_max);
+    const minF = (minC * 9 / 5) + 32;
+    const maxF = (maxC * 9 / 5) + 32;
+    const minTemp = currentUnit === "metric" ? minC.toFixed(0) : minF.toFixed(0);
+    const maxTemp = currentUnit === "metric" ? maxC.toFixed(0) : maxF.toFixed(0);
+    updateStat("temp-range", `${maxTemp}° / ${minTemp}°`);
+
     // UV Index - Now from Open-Meteo API
     updateStat("uv-index", data.uv_index !== undefined ? data.uv_index : "N/A");
 
@@ -283,6 +298,7 @@ function displayCurrentWeather(data) {
     }
 
     if (data.timezone !== undefined) {
+        currentTimezoneOffset = data.timezone;
         updateCurrentTime(data.timezone);
     }
 }
@@ -373,7 +389,7 @@ function displayHourlyForecast(data) {
     hourlyData.forEach(item => {
         const date = new Date(item.dt * 1000);
         const tempC = parseFloat(item.temp);
-        const tempF = (tempC * 9/5) + 32;
+        const tempF = (tempC * 9 / 5) + 32;
         const temp = currentUnit === "metric" ? tempC : tempF;
 
         const hourlyItem = document.createElement("div");
@@ -421,8 +437,8 @@ function displayDailyForecast(data) {
         const day = dailyData[dateStr];
         const maxTempC = Math.max(...day.temps);
         const minTempC = Math.min(...day.temps);
-        const maxTempF = (maxTempC * 9/5) + 32;
-        const minTempF = (minTempC * 9/5) + 32;
+        const maxTempF = (maxTempC * 9 / 5) + 32;
+        const minTempF = (minTempC * 9 / 5) + 32;
 
         const maxTemp = currentUnit === "metric" ? maxTempC : maxTempF;
         const minTemp = currentUnit === "metric" ? minTempC : minTempF;
@@ -473,8 +489,8 @@ function createTemperatureChart(data) {
 
         const tempC = parseFloat(item.temp);
         const feelsC = parseFloat(item.feels_like);
-        const temp = currentUnit === "metric" ? tempC : (tempC * 9/5) + 32;
-        const feels = currentUnit === "metric" ? feelsC : (feelsC * 9/5) + 32;
+        const temp = currentUnit === "metric" ? tempC : (tempC * 9 / 5) + 32;
+        const feels = currentUnit === "metric" ? feelsC : (feelsC * 9 / 5) + 32;
 
         temperatures.push(temp);
         feelsLike.push(feels);
@@ -554,7 +570,7 @@ function createTemperatureChart(data) {
                         size: 13
                     },
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             return ` ${context.dataset.label}: ${context.parsed.y.toFixed(1)}°`;
                         }
                     }

@@ -19,8 +19,8 @@ API_KEY = os.getenv("OPENWEATHER_API_KEY")
 WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
 PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
-PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System" if PYTHONANYWHERE_USERNAME else "."
-DEPLOYMENT_LOG = f"{PROJECT_PATH}/deployment.log"
+PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
+DEPLOYMENT_LOG = f"{PROJECT_PATH}/.github/logs/deployment.log"
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 
 
@@ -38,7 +38,7 @@ def push_log_to_github():
     """Commit and push deployment log to GitHub"""
     try:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        commit_message = f"Server reload successful - {timestamp}"
+        commit_message = f"[LOGS] Server reload successful - {timestamp}"
 
         subprocess.run(['git', 'add', 'deployment.log'], cwd=PROJECT_PATH, capture_output=True, timeout=10)
 
@@ -78,6 +78,8 @@ def reload_webapp_async(delay=3):
                 )
                 if reload_response.ok:
                     log_deployment("✓ Reload API call successful")
+                    # Push logs after successful reload
+                    threading.Thread(target=push_log_to_github, daemon=True).start()
                 else:
                     log_deployment(f"✗ Reload API failed: {reload_response.status_code}")
             except Exception as e:
@@ -94,7 +96,6 @@ log_deployment("=" * 60)
 log_deployment("SERVER STARTED SUCCESSFULLY")
 log_deployment(f"Flask app initialized at {datetime.now().isoformat()}")
 log_deployment("=" * 60)
-threading.Thread(target=push_log_to_github, daemon=True).start()
 
 
 @app.route('/github-webhook', methods=['POST'])
@@ -112,7 +113,7 @@ def github_webhook():
     event = request.headers.get('X-GitHub-Event', '')
 
     if event == 'ping':
-        log_deployment("Webhook ping received")
+        log_deployment("✓ Webhook ping received")
         return jsonify({'status': 'pong'}), 200
 
     if event != 'push':
@@ -123,42 +124,52 @@ def github_webhook():
     commit_msg = payload.get('head_commit', {}).get('message', '')
     commit_id = payload.get('head_commit', {}).get('id', 'unknown')[:7]
 
-    if commit_msg.startswith("Server reload successful"):
-        log_deployment(f"Ignoring self-generated commit: {commit_id}")
-        return jsonify({'status': 'ignored', 'reason': 'Log push commit'}), 200
+    # Ignore commits that start with [LOGS] to prevent infinite loops
+    if commit_msg.startswith("[LOGS]"):
+        log_deployment(f"Ignoring log commit: {commit_id} - {commit_msg}")
+        return jsonify({'status': 'ignored', 'reason': 'Log commit'}), 200
 
     if ref not in ['refs/heads/master', 'refs/heads/main']:
         return jsonify({'status': 'ignored', 'reason': f'Push to {ref}'}), 200
 
-    log_deployment(f"Webhook received: {ref} - {commit_id} - {commit_msg}")
+    log_deployment(f"📦 Webhook received: {ref} - {commit_id}")
+    log_deployment(f"   Commit message: {commit_msg}")
 
     try:
+        # Pull latest code from GitHub
+        log_deployment("🔄 Pulling latest code from GitHub...")
         pull_result = subprocess.run(
             ['git', 'pull', 'origin', 'master'],
             cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
         )
         if pull_result.returncode == 0:
             log_deployment(f"✓ Git pull successful")
+            log_deployment(f"   {pull_result.stdout.strip()}")
         else:
             log_deployment(f"✗ Git pull failed: {pull_result.stderr}")
+            return jsonify({'error': 'Git pull failed', 'details': pull_result.stderr}), 500
     except Exception as e:
         log_deployment(f"✗ Git pull error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
     try:
+        # Install dependencies
+        log_deployment("📦 Installing dependencies...")
         subprocess.run(
             ['pip', 'install', '-r', 'requirements.txt', '--user', '--quiet'],
             cwd=PROJECT_PATH, capture_output=True, timeout=120
         )
         log_deployment("✓ Dependencies installed")
     except Exception as e:
-        log_deployment(f"! Pip install warning: {str(e)}")
+        log_deployment(f"⚠ Pip install warning: {str(e)}")
 
-    reload_webapp_async(delay=3)
-    log_deployment("Webhook response sent, reload scheduled")
+    # Schedule webapp reload
+    reload_webapp_async(delay=2)
+    log_deployment("✓ Deployment complete, server reload scheduled")
 
     return jsonify({
-        'status': 'deployment_started',
+        'status': 'ok',
+        'message': 'Deployment successful, server reloading',
         'branch': ref,
         'commit': commit_id,
         'timestamp': datetime.now().isoformat()
@@ -313,7 +324,7 @@ def get_forecast():
                 "wind_speed": item['wind']['speed'],
                 "wind_direction": item['wind'].get('deg', 0),
                 "clouds": item['clouds']['all'],
-                "pop": item.get('pop', 0) * 100,  # Probability of precipitation
+                "pop": item.get('pop', 0) * 100,
                 "rain_3h": item.get('rain', {}).get('3h', 0),
                 "snow_3h": item.get('snow', {}).get('3h', 0)
             })
@@ -356,11 +367,7 @@ def get_air_quality():
             aqi_data = data['list'][0]
             components = aqi_data.get('components', {})
 
-            # OpenWeather AQI is 1-5 scale (European CAQI)
-            # Convert to US EPA scale (0-500) for better representation
             pm25 = components.get('pm2_5', 0)
-
-            # Calculate US EPA AQI from PM2.5 (more accurate)
             us_aqi = calculate_us_aqi_from_pm25(pm25) if pm25 > 0 else aqi_data['main']['aqi'] * 50
 
             return jsonify({
@@ -383,14 +390,13 @@ def get_air_quality():
 
 def calculate_us_aqi_from_pm25(pm25):
     """Convert PM2.5 to US EPA AQI scale"""
-    # US EPA AQI breakpoints for PM2.5
     breakpoints = [
-        (0, 12.0, 0, 50),  # Good
-        (12.1, 35.4, 51, 100),  # Moderate
-        (35.5, 55.4, 101, 150),  # Unhealthy for Sensitive Groups
-        (55.5, 150.4, 151, 200),  # Unhealthy
-        (150.5, 250.4, 201, 300),  # Very Unhealthy
-        (250.5, 500.4, 301, 500)  # Hazardous
+        (0, 12.0, 0, 50),
+        (12.1, 35.4, 51, 100),
+        (35.5, 55.4, 101, 150),
+        (55.5, 150.4, 151, 200),
+        (150.5, 250.4, 201, 300),
+        (250.5, 500.4, 301, 500)
     ]
 
     for low_c, high_c, low_i, high_i in breakpoints:
@@ -398,14 +404,12 @@ def calculate_us_aqi_from_pm25(pm25):
             aqi = ((high_i - low_i) / (high_c - low_c)) * (pm25 - low_c) + low_i
             return round(aqi)
 
-    # If PM2.5 is above all breakpoints
     return 500
 
 
 def get_uv_index_from_open_meteo(lat, lon):
-    """Fetch UV index from Open-Meteo API (completely free, no API key needed)"""
+    """Fetch UV index from Open-Meteo API"""
     try:
-        # Open-Meteo is a free weather API with UV index support
         url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=uv_index&timezone=auto"
         response = requests.get(url, timeout=5)
 
