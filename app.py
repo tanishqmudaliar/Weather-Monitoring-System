@@ -40,7 +40,7 @@ def push_log_to_github():
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         commit_message = f"[LOGS] Server reload successful - {timestamp}"
 
-        subprocess.run(['git', 'add', 'deployment.log'], cwd=PROJECT_PATH, capture_output=True, timeout=10)
+        subprocess.run(['git', 'add', '.github/logs/deployment.log'], cwd=PROJECT_PATH, capture_output=True, timeout=10)
 
         commit_result = subprocess.run(
             ['git', 'commit', '-m', commit_message],
