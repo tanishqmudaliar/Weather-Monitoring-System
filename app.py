@@ -427,4 +427,4 @@ def get_uv_index_from_open_meteo(lat, lon):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
