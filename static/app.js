@@ -651,6 +651,7 @@ function showLoading() {
   if (loader) loader.classList.remove("hidden");
   if (dashboard) dashboard.classList.add("hidden");
   if (errorSection) errorSection.classList.add("hidden");
+  if (emptyState) emptyState.style.display = "none";
 }
 
 function hideLoading() {
@@ -665,6 +666,7 @@ function showDashboard() {
 function showError(message) {
   hideLoading();
   if (dashboard) dashboard.classList.add("hidden");
+  if (emptyState) emptyState.style.display = "none";
   if (errorSection) {
     errorSection.classList.remove("hidden");
     const errorText = errorSection.querySelector("p");

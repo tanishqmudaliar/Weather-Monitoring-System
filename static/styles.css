@@ -474,6 +474,10 @@ input[type="text"]::placeholder {
   transition: all 0.4s ease;
 }
 
+.card-main {
+  margin-bottom: 0px;
+}
+
 .card::before {
   content: "";
   position: absolute;
@@ -1143,8 +1147,8 @@ input[type="text"]::placeholder {
 /* Footer */
 footer {
   text-align: center;
-  padding: 60px 20px 40px;
-  margin-top: 60px;
+  padding: 40px 20px 40px;
+  margin-top: 40px;
   border-top: 1px solid var(--border);
 }
 
