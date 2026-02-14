@@ -184,7 +184,18 @@ def view_deployment_log():
     try:
         with open(DEPLOYMENT_LOG, 'r') as f:
             logs = f.read()
-        return f"<pre>{logs}</pre>", 200
+            
+        return f"""
+        <html>
+            <head>
+                <title>WeatherPro Intelligence | Premium Weather Platform</title>
+            </head>
+            <body>
+                <pre>{logs}</pre>
+            </body>
+        </html>
+        """, 200
+        
     except FileNotFoundError:
         return "No deployment log found", 404
     except Exception as e:
