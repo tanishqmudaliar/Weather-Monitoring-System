@@ -171,6 +171,7 @@ async function fetchAllWeatherData(location) {
 
     if (currentWeather) {
       displayCurrentWeather(currentWeather);
+      displayWeatherAlerts(currentWeather);
       currentWeatherData = currentWeather;
     }
 
@@ -274,6 +275,11 @@ function displayCurrentWeather(data) {
   // Stats
   updateStat("humidity", `${data.humidity}%`);
   updateStat("pressure", `${data.pressure} hPa`);
+  updateStat("pressure-sea", `${data.pressure_sea_level || data.pressure} hPa`);
+  updateStat(
+    "pressure-grnd",
+    `${data.pressure_grnd_level || data.pressure} hPa`,
+  );
 
   const windMps = parseFloat(data.wind_speed);
   const windMph = windMps * 2.237;
@@ -405,6 +411,8 @@ function displayAirQuality(data) {
   updateStat("pm10", data.pm10 ? data.pm10.toFixed(1) : "--");
   updateStat("o3", data.o3 ? data.o3.toFixed(1) : "--");
   updateStat("no2", data.no2 ? data.no2.toFixed(1) : "--");
+  updateStat("no", data.no ? data.no.toFixed(1) : "--");
+  updateStat("nh3", data.nh3 ? data.nh3.toFixed(1) : "--");
 }
 
 function displayHourlyForecast(data) {
@@ -671,5 +679,97 @@ function showError(message) {
     errorSection.classList.remove("hidden");
     const errorText = errorSection.querySelector("p");
     if (errorText && message) errorText.textContent = message;
+  }
+}
+
+function displayWeatherAlerts(data) {
+  const alertsContainer = document.getElementById("weather-alerts");
+  if (!alertsContainer) return;
+
+  alertsContainer.innerHTML = "";
+
+  const weatherId = data.weather_id;
+  const weatherMain = data.weather_main;
+
+  if (!weatherId) return;
+
+  let alert = null;
+
+  // Thunderstorm (200-299)
+  if (weatherId >= 200 && weatherId < 300) {
+    alert = {
+      type: "danger",
+      icon: "bolt",
+      title: "Thunderstorm Warning",
+      message: `${weatherMain}: ${data.description}. Seek shelter immediately.`,
+    };
+  }
+  // Heavy Rain (502, 503, 504, 522)
+  else if ([502, 503, 504, 522].includes(weatherId)) {
+    alert = {
+      type: "warning",
+      icon: "cloud-showers-heavy",
+      title: "Heavy Rain Alert",
+      message: `${data.description}. Flooding possible in low-lying areas.`,
+    };
+  }
+  // Snow (600-699)
+  else if (weatherId >= 600 && weatherId < 700) {
+    alert = {
+      type: "info",
+      icon: "snowflake",
+      title: "Snow Advisory",
+      message: `${data.description}. Drive carefully and expect delays.`,
+    };
+  }
+  // Atmosphere hazards - Fog, Mist, Haze, etc. (700-799)
+  else if (weatherId >= 700 && weatherId < 800) {
+    if ([711, 731, 751, 761, 762].includes(weatherId)) {
+      alert = {
+        type: "warning",
+        icon: "smog",
+        title: "Air Quality Warning",
+        message: `${data.description}. Limit outdoor exposure.`,
+      };
+    } else if (weatherId === 781) {
+      alert = {
+        type: "danger",
+        icon: "tornado",
+        title: "Tornado Warning",
+        message: "Tornado detected! Seek shelter immediately!",
+      };
+    } else if ([701, 741].includes(weatherId)) {
+      alert = {
+        type: "info",
+        icon: "smog",
+        title: "Visibility Advisory",
+        message: `${data.description}. Reduced visibility conditions.`,
+      };
+    }
+  }
+  // Extreme (800+) - clear/clouds don't need alerts
+  else if (weatherId === 771) {
+    alert = {
+      type: "warning",
+      icon: "wind",
+      title: "High Wind Warning",
+      message: "Squalls detected. Secure loose objects.",
+    };
+  }
+
+  if (alert) {
+    const alertDiv = document.createElement("div");
+    alertDiv.className = `weather-alert alert-${alert.type}`;
+    alertDiv.innerHTML = `
+      <div class="alert-icon"><i class="fas fa-${alert.icon}"></i></div>
+      <div class="alert-content">
+        <strong>${alert.title}</strong>
+        <p>${alert.message}</p>
+      </div>
+      <button class="alert-close" onclick="this.parentElement.remove()">
+        <i class="fas fa-times"></i>
+      </button>
+    `;
+    alertsContainer.appendChild(alertDiv);
   }
 }

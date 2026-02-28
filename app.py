@@ -271,8 +271,12 @@ def get_current_weather():
             "temp_max": data['main']['temp_max'],
             "description": data['weather'][0]['description'].title(),
             "icon": data['weather'][0]['icon'],
+            "weather_id": data['weather'][0]['id'],
+            "weather_main": data['weather'][0]['main'],
             "humidity": data['main']['humidity'],
             "pressure": data['main']['pressure'],
+            "pressure_sea_level": data['main'].get('sea_level', data['main']['pressure']),
+            "pressure_grnd_level": data['main'].get('grnd_level', data['main']['pressure']),
             "wind_speed": data['wind']['speed'],
             "wind_direction": data['wind'].get('deg', 0),
             "wind_gust": data['wind'].get('gust', data['wind']['speed']),
@@ -389,8 +393,10 @@ def get_air_quality():
                 "pm10": components.get('pm10', 0),
                 "o3": components.get('o3', 0),
                 "no2": components.get('no2', 0),
+                "no": components.get('no', 0),
                 "so2": components.get('so2', 0),
-                "co": components.get('co', 0)
+                "co": components.get('co', 0),
+                "nh3": components.get('nh3', 0)
             })
         else:
             return jsonify({"error": "No air quality data"}), 404
