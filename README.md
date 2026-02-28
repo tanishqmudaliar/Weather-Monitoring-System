@@ -50,9 +50,11 @@ The project implements a fully automated CI/CD pipeline—every push to `master`
 
 - Real-time weather data for any city worldwide
 - Temperature, feels-like, humidity, pressure, and wind metrics
+- Pressure readings: atmospheric, sea level, and ground level (hPa)
 - UV index via Open-Meteo API integration
 - Sunrise/sunset times with timezone support
-- Air quality index (AQI) with pollutant breakdown
+- **Weather Alerts**: Automatic warnings for severe conditions (thunderstorms, heavy rain, snow, fog, tornadoes)
+- Air quality index (AQI) with full pollutant breakdown (PM2.5, PM10, O₃, NO₂, NO, SO₂, CO, NH₃)
 
 ### 5-Day Forecast
 
@@ -388,8 +390,12 @@ curl "https://tanishqmudaliar.pythonanywhere.com/api/current-weather?location=Mu
   "feels_like": 25.99,
   "humidity": 65,
   "icon": "50n",
+  "weather_id": 721,
+  "weather_main": "Haze",
   "location": "Mumbai, IN",
   "pressure": 1014,
+  "pressure_sea_level": 1014,
+  "pressure_grnd_level": 1013,
   "rain_1h": 0,
   "snow_1h": 0,
   "sunrise": 1769305456,
