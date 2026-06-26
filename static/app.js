@@ -549,30 +549,30 @@ function createTemperatureChart(data) {
         {
           label: "Temperature",
           data: temperatures,
-          borderColor: "#60a5fa",
-          backgroundColor: "rgba(96, 165, 250, 0.1)",
+          borderColor: "#7cc7ff",
+          backgroundColor: "rgba(124, 199, 255, 0.14)",
           borderWidth: 3,
           tension: 0.4,
           fill: true,
           pointRadius: 5,
           pointHoverRadius: 7,
-          pointBackgroundColor: "#60a5fa",
-          pointBorderColor: "#0a0e27",
+          pointBackgroundColor: "#7cc7ff",
+          pointBorderColor: "#050607",
           pointBorderWidth: 2,
         },
         {
           label: "Feels Like",
           data: feelsLike,
-          borderColor: "#a78bfa",
-          backgroundColor: "rgba(167, 139, 250, 0.1)",
+          borderColor: "#ffd166",
+          backgroundColor: "rgba(255, 209, 102, 0.1)",
           borderWidth: 2,
           borderDash: [8, 4],
           tension: 0.4,
           fill: false,
           pointRadius: 4,
           pointHoverRadius: 6,
-          pointBackgroundColor: "#a78bfa",
-          pointBorderColor: "#0a0e27",
+          pointBackgroundColor: "#ffd166",
+          pointBorderColor: "#050607",
           pointBorderWidth: 2,
         },
       ],
@@ -587,11 +587,11 @@ function createTemperatureChart(data) {
       plugins: {
         legend: {
           labels: {
-            color: "#cbd5e1",
+            color: "#a9b4bd",
             font: {
               size: 13,
               weight: "600",
-              family: "'Space Grotesk', sans-serif",
+              family: "'Inter', sans-serif",
             },
             padding: 20,
             usePointStyle: true,
@@ -599,11 +599,11 @@ function createTemperatureChart(data) {
           },
         },
         tooltip: {
-          backgroundColor: "rgba(10, 14, 39, 0.95)",
-          titleColor: "#f8fafc",
-          bodyColor: "#cbd5e1",
-          borderColor: "#60a5fa",
-          borderWidth: 2,
+          backgroundColor: "rgba(9, 12, 15, 0.96)",
+          titleColor: "#f6f8fa",
+          bodyColor: "#a9b4bd",
+          borderColor: "rgba(255, 255, 255, 0.14)",
+          borderWidth: 1,
           padding: 16,
           displayColors: true,
           titleFont: {
@@ -623,11 +623,11 @@ function createTemperatureChart(data) {
       scales: {
         x: {
           grid: {
-            color: "rgba(148, 163, 184, 0.08)",
+            color: "rgba(198, 208, 215, 0.08)",
             drawBorder: false,
           },
           ticks: {
-            color: "#64748b",
+            color: "#75818b",
             font: {
               size: 11,
               weight: "500",
@@ -638,11 +638,11 @@ function createTemperatureChart(data) {
         },
         y: {
           grid: {
-            color: "rgba(148, 163, 184, 0.08)",
+            color: "rgba(198, 208, 215, 0.08)",
             drawBorder: false,
           },
           ticks: {
-            color: "#64748b",
+            color: "#75818b",
             font: {
               size: 11,
               weight: "500",

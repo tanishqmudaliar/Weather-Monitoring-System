@@ -8,7 +8,7 @@
         content="WeatherPro Intelligence - Premium Weather Monitoring & Forecasting Platform with real-time data, air quality insights, and accurate forecasts">
     <meta name="keywords" content="weather, forecast, air quality, temperature, humidity, wind speed">
     <meta name="author" content="Tanishq Mudaliar, Saivel Konar, Hrshita Balakrishnan, Pranali Raut">
-    <meta name="theme-color" content="#050816">
+    <meta name="theme-color" content="#050607">
     <title>WeatherPro Intelligence | Premium Weather Platform</title>
 
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -29,9 +29,7 @@
         <!-- Header -->
         <header>
             <div class="brand">
-                <div class="brand-icon">
-                    <img src="{{ url_for('static', filename='favicon.ico') }}" alt="WeatherPro Logo" />
-                </div>
+                <img class="brand-logo" src="{{ url_for('static', filename='favicon.ico') }}" alt="WeatherPro Logo" />
                 <div class="brand-text">
                     <h1>WeatherPro Intelligence</h1>
                     <p>Premium Weather Monitoring & Forecasting</p>
@@ -53,12 +51,13 @@
                     <input type="text" id="location-input" placeholder="Search for any city worldwide..."
                         autocomplete="off">
                 </div>
+                <button id="geolocation-btn" class="btn btn-secondary" title="Use my location"
+                    aria-label="Use my location">
+                    <i class="fas fa-location-crosshairs"></i>
+                </button>
                 <button id="search-btn" class="btn btn-primary">
                     <i class="fas fa-magnifying-glass"></i>
                     <span>Search</span>
-                </button>
-                <button id="geolocation-btn" class="btn btn-secondary" title="Use my location">
-                    <i class="fas fa-location-crosshairs"></i>
                 </button>
             </div>
         </div>
