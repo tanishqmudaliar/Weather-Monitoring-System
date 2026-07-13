@@ -38,37 +38,46 @@ def log_deployment(message):
 
 
 def push_log_to_github():
-    """Commit and push deployment log to GitHub"""
     try:
+        log_deployment("DEBUG: push_log_to_github started")
+
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         commit_message = f"[LOGS] Deployment log update - {timestamp}"
 
-        subprocess.run(
+        add = subprocess.run(
             ['git', 'add', '.github/logs/deployment.log'],
             cwd=PROJECT_PATH,
             capture_output=True,
-            timeout=10
+            text=True
         )
 
-        commit_result = subprocess.run(
+        log_deployment(f"DEBUG: git add rc={add.returncode}")
+
+        commit = subprocess.run(
             ['git', 'commit', '-m', commit_message],
             cwd=PROJECT_PATH,
             capture_output=True,
-            text=True,
-            timeout=10
+            text=True
         )
 
-        if commit_result.returncode == 0:
-            subprocess.run(
+        log_deployment(f"DEBUG: git commit rc={commit.returncode}")
+        log_deployment(commit.stdout.strip())
+        log_deployment(commit.stderr.strip())
+
+        if commit.returncode == 0:
+            push = subprocess.run(
                 ['git', 'push', 'origin', 'master'],
                 cwd=PROJECT_PATH,
                 capture_output=True,
-                text=True,
-                timeout=30
+                text=True
             )
 
-    except Exception:
-        pass
+            log_deployment(f"DEBUG: git push rc={push.returncode}")
+            log_deployment(push.stdout.strip())
+            log_deployment(push.stderr.strip())
+
+    except Exception as e:
+        log_deployment(f"DEBUG EXCEPTION: {e}")
 
 
 def reload_webapp_async(delay=3):
@@ -80,16 +89,18 @@ def reload_webapp_async(delay=3):
 
         if PYTHONANYWHERE_API_TOKEN and PYTHONANYWHERE_USERNAME:
             try:
+                # Create the deployment flag BEFORE reloading
+                with open(DEPLOYMENT_FLAG, "w") as f:
+                    f.write("1")
+
                 reload_response = requests.post(
                     f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/',
                     headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
                     timeout=30
                 )
+
                 if reload_response.ok:
                     log_deployment("✓ Reload API call successful")
-
-                    with open(DEPLOYMENT_FLAG, "w") as f:
-                        f.write("1")
                 else:
                     log_deployment(f"✗ Reload API failed: {reload_response.status_code}")
             except Exception as e:
@@ -106,6 +117,7 @@ log_deployment("=" * 60)
 log_deployment("SERVER STARTED SUCCESSFULLY")
 log_deployment(f"Flask app initialized at {datetime.now().isoformat()}")
 log_deployment("=" * 60)
+log_deployment(f"DEBUG: deployment flag exists = {os.path.exists(DEPLOYMENT_FLAG)}")
 
 # If this startup came from a deployment, sync deployment.log to GitHub
 if os.path.exists(DEPLOYMENT_FLAG):
