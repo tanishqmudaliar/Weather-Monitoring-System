@@ -2,8 +2,8 @@ import os
 import subprocess
 import hmac
 import hashlib
-import requests
 import threading
+import requests
 import time
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -21,7 +21,6 @@ PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 DEPLOYMENT_LOG = f"{PROJECT_PATH}/.github/logs/deployment.log"
-DEPLOYMENT_FLAG = f"{PROJECT_PATH}/.deployment_pending"
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 
 
@@ -37,49 +36,6 @@ def log_deployment(message):
         print(f"Failed to write log: {e}")
 
 
-def push_log_to_github():
-    try:
-        log_deployment("DEBUG: push_log_to_github started")
-
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        commit_message = f"[LOGS] Deployment log update - {timestamp}"
-
-        add = subprocess.run(
-            ['git', 'add', '.github/logs/deployment.log'],
-            cwd=PROJECT_PATH,
-            capture_output=True,
-            text=True
-        )
-
-        log_deployment(f"DEBUG: git add rc={add.returncode}")
-
-        commit = subprocess.run(
-            ['git', 'commit', '-m', commit_message],
-            cwd=PROJECT_PATH,
-            capture_output=True,
-            text=True
-        )
-
-        log_deployment(f"DEBUG: git commit rc={commit.returncode}")
-        log_deployment(commit.stdout.strip())
-        log_deployment(commit.stderr.strip())
-
-        if commit.returncode == 0:
-            push = subprocess.run(
-                ['git', 'push', 'origin', 'master'],
-                cwd=PROJECT_PATH,
-                capture_output=True,
-                text=True
-            )
-
-            log_deployment(f"DEBUG: git push rc={push.returncode}")
-            log_deployment(push.stdout.strip())
-            log_deployment(push.stderr.strip())
-
-    except Exception as e:
-        log_deployment(f"DEBUG EXCEPTION: {e}")
-
-
 def reload_webapp_async(delay=3):
     """Reload webapp after delay in background thread"""
 
@@ -89,13 +45,6 @@ def reload_webapp_async(delay=3):
 
         if PYTHONANYWHERE_API_TOKEN and PYTHONANYWHERE_USERNAME:
             try:
-                # Create the deployment flag BEFORE reloading
-                with open(DEPLOYMENT_FLAG, "w") as f:
-                    f.write("1")
-
-                log_deployment(f"DEBUG: created {DEPLOYMENT_FLAG}")
-                log_deployment(f"DEBUG: exists before reload = {os.path.exists(DEPLOYMENT_FLAG)}")
-
                 reload_response = requests.post(
                     f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/',
                     headers={'Authorization': f'Token {PYTHONANYWHERE_API_TOKEN}'},
@@ -120,12 +69,6 @@ log_deployment("=" * 60)
 log_deployment("SERVER STARTED SUCCESSFULLY")
 log_deployment(f"Flask app initialized at {datetime.now().isoformat()}")
 log_deployment("=" * 60)
-log_deployment(f"DEBUG: deployment flag exists = {os.path.exists(DEPLOYMENT_FLAG)}")
-
-# If this startup came from a deployment, sync deployment.log to GitHub
-if os.path.exists(DEPLOYMENT_FLAG):
-    os.remove(DEPLOYMENT_FLAG)
-    threading.Thread(target=push_log_to_github).start()
 
 
 @app.route('/github-webhook', methods=['POST'])
