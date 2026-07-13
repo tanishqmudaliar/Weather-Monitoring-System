@@ -612,4 +612,6 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-Made with ❤️ by the Weather Monitoring System Team
+Made with ❤️ by [Tanishq Mudaliar](https://github.com/tanishqmudaliar)
+
+**Stop tab-hopping for the forecast. One dashboard, every metric that matters. ⛅**
