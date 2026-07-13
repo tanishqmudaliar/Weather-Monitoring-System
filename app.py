@@ -21,7 +21,7 @@ PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 DEPLOYMENT_LOG = f"{PROJECT_PATH}/.github/logs/deployment.log"
-DEPLOYMENT_FLAG = "/tmp/deployment_pending"
+DEPLOYMENT_FLAG = f"{PROJECT_PATH}/.deployment_pending"
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 
 
@@ -92,6 +92,9 @@ def reload_webapp_async(delay=3):
                 # Create the deployment flag BEFORE reloading
                 with open(DEPLOYMENT_FLAG, "w") as f:
                     f.write("1")
+
+                log_deployment(f"DEBUG: created {DEPLOYMENT_FLAG}")
+                log_deployment(f"DEBUG: exists before reload = {os.path.exists(DEPLOYMENT_FLAG)}")
 
                 reload_response = requests.post(
                     f'https://www.pythonanywhere.com/api/v0/user/{PYTHONANYWHERE_USERNAME}/webapps/{PYTHONANYWHERE_USERNAME}.pythonanywhere.com/reload/',
