@@ -21,6 +21,7 @@ PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 DEPLOYMENT_LOG = f"{PROJECT_PATH}/.github/logs/deployment.log"
+DEPLOYMENT_FLAG = "/tmp/deployment_pending"
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 
 
@@ -40,28 +41,34 @@ def push_log_to_github():
     """Commit and push deployment log to GitHub"""
     try:
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        commit_message = f"[LOGS] Server reload successful - {timestamp}"
+        commit_message = f"[LOGS] Deployment log update - {timestamp}"
 
-        subprocess.run(['git', 'add', '.github/logs/deployment.log'], cwd=PROJECT_PATH, capture_output=True, timeout=10)
+        subprocess.run(
+            ['git', 'add', '.github/logs/deployment.log'],
+            cwd=PROJECT_PATH,
+            capture_output=True,
+            timeout=10
+        )
 
         commit_result = subprocess.run(
             ['git', 'commit', '-m', commit_message],
-            cwd=PROJECT_PATH, capture_output=True, text=True, timeout=10
+            cwd=PROJECT_PATH,
+            capture_output=True,
+            text=True,
+            timeout=10
         )
 
         if commit_result.returncode == 0:
-            push_result = subprocess.run(
+            subprocess.run(
                 ['git', 'push', 'origin', 'master'],
-                cwd=PROJECT_PATH, capture_output=True, text=True, timeout=30
+                cwd=PROJECT_PATH,
+                capture_output=True,
+                text=True,
+                timeout=30
             )
-            if push_result.returncode == 0:
-                log_deployment(f"✓ Log pushed to GitHub: {commit_message}")
-            else:
-                log_deployment(f"✗ Git push failed: {push_result.stderr.strip()}")
-        else:
-            log_deployment("No new log entries to push")
-    except Exception as e:
-        log_deployment(f"✗ Git push error: {str(e)}")
+
+    except Exception:
+        pass
 
 
 def reload_webapp_async(delay=3):
@@ -80,8 +87,9 @@ def reload_webapp_async(delay=3):
                 )
                 if reload_response.ok:
                     log_deployment("✓ Reload API call successful")
-                    # Push logs after successful reload
-                    threading.Thread(target=push_log_to_github, daemon=True).start()
+
+                    with open(DEPLOYMENT_FLAG, "w") as f:
+                        f.write("1")
                 else:
                     log_deployment(f"✗ Reload API failed: {reload_response.status_code}")
             except Exception as e:
@@ -98,6 +106,11 @@ log_deployment("=" * 60)
 log_deployment("SERVER STARTED SUCCESSFULLY")
 log_deployment(f"Flask app initialized at {datetime.now().isoformat()}")
 log_deployment("=" * 60)
+
+# If this startup came from a deployment, sync deployment.log to GitHub
+if os.path.exists(DEPLOYMENT_FLAG):
+    os.remove(DEPLOYMENT_FLAG)
+    threading.Thread(target=push_log_to_github).start()
 
 
 @app.route('/github-webhook', methods=['POST'])
