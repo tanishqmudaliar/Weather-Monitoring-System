@@ -1,0 +1,356 @@
+[2026-01-25T13:45:25.807629] ============================================================
+[2026-01-25T13:45:25.812097] SERVER STARTED SUCCESSFULLY
+[2026-01-25T13:45:25.817032] Flask app initialized at 2026-01-25T13:45:25.816623
+[2026-01-25T13:45:25.822062] ============================================================
+[2026-01-25T13:55:36.011889] 📦 Webhook received: refs/heads/master - a0865d2
+[2026-01-25T13:55:36.017940]    Commit message: Fix title typo in index.html and update deployment log path in app.py
+[2026-01-25T13:55:36.022698] 🔄 Pulling latest code from GitHub...
+[2026-01-25T13:55:36.933601] ✓ Git pull successful
+[2026-01-25T13:55:36.937902]    Updating 0e24a23..a0865d2
+Fast-forward
+ app.py               | 2 +-
+ templates/index.html | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+[2026-01-25T13:55:36.941836] 📦 Installing dependencies...
+[2026-01-25T13:55:42.093094] ✓ Dependencies installed
+[2026-01-25T13:55:42.102375] ✓ Deployment complete, server reload scheduled
+[2026-01-25T13:55:44.108452] Starting webapp reload...
+[2026-01-25T13:55:53.838711] ============================================================
+[2026-01-25T13:55:53.846020] SERVER STARTED SUCCESSFULLY
+[2026-01-25T13:55:53.851746] Flask app initialized at 2026-01-25T13:55:53.849984
+[2026-01-25T13:55:53.856694] ============================================================
+[2026-01-25T14:04:42.360167] 📦 Webhook received: refs/heads/master - aed2f6d
+[2026-01-25T14:04:42.367241]    Commit message: feat: Updated GitHub Actions workflow for PythonAnywhere deployment and the initial weather dashboard UI.
+[2026-01-25T14:04:42.372664] 🔄 Pulling latest code from GitHub...
+[2026-01-25T14:04:43.354175] ✓ Git pull successful
+[2026-01-25T14:04:43.359084]    Updating a0865d2..aed2f6d
+Fast-forward
+ .github/workflows/deploy.yml | 22 +---------------------
+ templates/index.html         |  2 +-
+ 2 files changed, 2 insertions(+), 22 deletions(-)
+[2026-01-25T14:04:43.362781] 📦 Installing dependencies...
+[2026-01-25T14:04:47.697435] ✓ Dependencies installed
+[2026-01-25T14:04:47.703776] ✓ Deployment complete, server reload scheduled
+[2026-01-25T14:04:49.704418] Starting webapp reload...
+[2026-01-25T14:04:54.845583] ============================================================
+[2026-01-25T14:04:54.848951] SERVER STARTED SUCCESSFULLY
+[2026-01-25T14:04:54.853065] Flask app initialized at 2026-01-25T14:04:54.852565
+[2026-01-25T14:04:54.856846] ============================================================
+[2026-01-25T14:47:49.847245] 📦 Webhook received: refs/heads/master - 312f5c0
+[2026-01-25T14:47:49.855739]    Commit message: feat: Ensure log directory exists for deployment events and update project documentation.
+[2026-01-25T14:47:49.861133] 🔄 Pulling latest code from GitHub...
+[2026-01-25T14:47:50.887816] ✓ Git pull successful
+[2026-01-25T14:47:50.891269]    Updating aed2f6d..312f5c0
+Fast-forward
+ README.md        | 129 ++++++++++++++++++++++++++++++++++---------------------
+ app.py           |   2 +
+ requirements.txt |   1 -
+ 3 files changed, 81 insertions(+), 51 deletions(-)
+[2026-01-25T14:47:50.895954] 📦 Installing dependencies...
+[2026-01-25T14:47:55.674296] ✓ Dependencies installed
+[2026-01-25T14:47:55.679045] ✓ Deployment complete, server reload scheduled
+[2026-01-25T14:47:57.681651] Starting webapp reload...
+[2026-01-25T14:48:04.467982] ============================================================
+[2026-01-25T14:48:04.473083] SERVER STARTED SUCCESSFULLY
+[2026-01-25T14:48:04.478887] Flask app initialized at 2026-01-25T14:48:04.477851
+[2026-01-25T14:48:04.483907] ============================================================
+[2026-02-01T14:54:03.685409] 📦 Webhook received: refs/heads/master - 265d1bd
+[2026-02-01T14:54:03.691449]    Commit message: feat: Add Docker support with configuration files and update README for local development
+[2026-02-01T14:54:03.696073] 🔄 Pulling latest code from GitHub...
+[2026-02-01T14:54:05.285570] ✓ Git pull successful
+[2026-02-01T14:54:05.289696]    Updating 312f5c0..265d1bd
+Fast-forward
+ .dockerignore      |  20 ++++
+ .env.example       |   9 ++
+ Dockerfile         |  28 +++++
+ README.md          | 320 +++++++++++++++++++++++++++++++++++++++++------------
+ app.py             |   2 +-
+ docker-compose.yml |  28 +++++
+ 6 files changed, 336 insertions(+), 71 deletions(-)
+ create mode 100644 .dockerignore
+ create mode 100644 .env.example
+ create mode 100644 Dockerfile
+ create mode 100644 docker-compose.yml
+[2026-02-01T14:54:05.295492] 📦 Installing dependencies...
+[2026-02-01T14:54:13.433457] ✓ Dependencies installed
+[2026-02-01T14:54:13.442942] ✓ Deployment complete, server reload scheduled
+[2026-02-01T14:54:15.444849] Starting webapp reload...
+[2026-02-01T14:54:21.334611] ============================================================
+[2026-02-01T14:54:21.338855] SERVER STARTED SUCCESSFULLY
+[2026-02-01T14:54:21.342597] Flask app initialized at 2026-02-01T14:54:21.341934
+[2026-02-01T14:54:21.346186] ============================================================
+[2026-02-01T15:13:07.169776] 📦 Webhook received: refs/heads/master - 29936c0
+[2026-02-01T15:13:07.173558]    Commit message: Refactor code structure for improved readability and maintainability
+[2026-02-01T15:13:07.177966] 🔄 Pulling latest code from GitHub...
+[2026-02-01T15:13:08.139231] ✓ Git pull successful
+[2026-02-01T15:13:08.143963]    Updating 265d1bd..29936c0
+Fast-forward
+ static/app.js     | 1076 +++++++++++++++++----------------
+ static/styles.css | 1715 +++++++++++++++++++++++++++--------------------------
+ 2 files changed, 1432 insertions(+), 1359 deletions(-)
+[2026-02-01T15:13:08.149670] 📦 Installing dependencies...
+[2026-02-01T15:13:14.301493] ✓ Dependencies installed
+[2026-02-01T15:13:14.305023] ✓ Deployment complete, server reload scheduled
+[2026-02-01T15:13:16.308846] Starting webapp reload...
+[2026-02-01T15:13:23.300810] ============================================================
+[2026-02-01T15:13:23.305298] SERVER STARTED SUCCESSFULLY
+[2026-02-01T15:13:23.309165] Flask app initialized at 2026-02-01T15:13:23.308417
+[2026-02-01T15:13:23.312578] ============================================================
+[2026-02-02T18:29:03.103354] ============================================================
+[2026-02-02T18:29:03.109081] SERVER STARTED SUCCESSFULLY
+[2026-02-02T18:29:03.112867] Flask app initialized at 2026-02-02T18:29:03.112249
+[2026-02-02T18:29:03.117377] ============================================================
+[2026-02-14T17:09:05.295770] 📦 Webhook received: refs/heads/master - ed7b953
+[2026-02-14T17:09:05.301801]    Commit message: feat: Hide empty state on loading and error display; adjust footer padding and margin
+[2026-02-14T17:09:05.306135] 🔄 Pulling latest code from GitHub...
+[2026-02-14T17:09:06.541841] ✓ Git pull successful
+[2026-02-14T17:09:06.547976]    Updating 29936c0..ed7b953
+Fast-forward
+ static/app.js     | 2 ++
+ static/styles.css | 8 ++++++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+[2026-02-14T17:09:06.551953] 📦 Installing dependencies...
+[2026-02-14T17:09:16.726926] ✓ Dependencies installed
+[2026-02-14T17:09:16.742297] ✓ Deployment complete, server reload scheduled
+[2026-02-14T17:09:18.745833] Starting webapp reload...
+[2026-02-14T17:09:26.250423] ============================================================
+[2026-02-14T17:09:26.254632] SERVER STARTED SUCCESSFULLY
+[2026-02-14T17:09:26.259098] Flask app initialized at 2026-02-14T17:09:26.258286
+[2026-02-14T17:09:26.263244] ============================================================
+[2026-02-14T17:17:20.970900] 📦 Webhook received: refs/heads/master - b38d8ed
+[2026-02-14T17:17:20.976261]    Commit message: feat: Enhance deployment log view with HTML formatting for better readability
+[2026-02-14T17:17:20.981795] 🔄 Pulling latest code from GitHub...
+[2026-02-14T17:17:21.837914] ✓ Git pull successful
+[2026-02-14T17:17:21.842520]    Updating ed7b953..b38d8ed
+Fast-forward
+ app.py | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+[2026-02-14T17:17:21.848808] 📦 Installing dependencies...
+[2026-02-14T17:17:26.469874] ✓ Dependencies installed
+[2026-02-14T17:17:26.478609] ✓ Deployment complete, server reload scheduled
+[2026-02-14T17:17:28.481261] Starting webapp reload...
+[2026-02-14T17:17:36.384327] ============================================================
+[2026-02-14T17:17:36.390107] SERVER STARTED SUCCESSFULLY
+[2026-02-14T17:17:36.396707] Flask app initialized at 2026-02-14T17:17:36.394307
+[2026-02-14T17:17:36.400208] ============================================================
+[2026-02-16T11:40:08.934098] ============================================================
+[2026-02-16T11:40:08.937861] SERVER STARTED SUCCESSFULLY
+[2026-02-16T11:40:08.941961] Flask app initialized at 2026-02-16T11:40:08.941230
+[2026-02-16T11:40:08.945711] ============================================================
+[2026-02-28T17:31:26.774398] 📦 Webhook received: refs/heads/master - fdc1bf7
+[2026-02-28T17:31:26.780993]    Commit message: feat: Add weather alerts and additional pressure stats to UI; enhance air quality details
+[2026-02-28T17:31:26.785079] 🔄 Pulling latest code from GitHub...
+[2026-02-28T17:31:27.805049] ✓ Git pull successful
+[2026-02-28T17:31:27.809135]    Updating b38d8ed..fdc1bf7
+Fast-forward
+ app.py               |   8 +-
+ static/app.js        | 100 +++++++++++++++++++++++
+ static/styles.css    | 223 +++++++++++++++++++++++++++++++++++++++++++++------
+ templates/index.html |  18 +++++
+ 4 files changed, 323 insertions(+), 26 deletions(-)
+[2026-02-28T17:31:27.813257] 📦 Installing dependencies...
+[2026-02-28T17:31:31.737513] ✓ Dependencies installed
+[2026-02-28T17:31:31.746395] ✓ Deployment complete, server reload scheduled
+[2026-02-28T17:31:33.749165] Starting webapp reload...
+[2026-02-28T17:31:39.333494] ============================================================
+[2026-02-28T17:31:39.336823] SERVER STARTED SUCCESSFULLY
+[2026-02-28T17:31:39.340220] Flask app initialized at 2026-02-28T17:31:39.339567
+[2026-02-28T17:31:39.344100] ============================================================
+[2026-02-28T17:46:14.218770] 📦 Webhook received: refs/heads/master - b258b21
+[2026-02-28T17:46:14.223949]    Commit message: feat: Update README to include pressure readings and weather alerts; enhance air quality details
+[2026-02-28T17:46:14.228291] 🔄 Pulling latest code from GitHub...
+[2026-02-28T17:46:15.025761] ✓ Git pull successful
+[2026-02-28T17:46:15.031872]    Updating fdc1bf7..b258b21
+Fast-forward
+ README.md | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+[2026-02-28T17:46:15.036207] 📦 Installing dependencies...
+[2026-02-28T17:46:21.550042] ✓ Dependencies installed
+[2026-02-28T17:46:21.559197] ✓ Deployment complete, server reload scheduled
+[2026-02-28T17:46:23.560739] Starting webapp reload...
+[2026-02-28T17:46:29.189453] ============================================================
+[2026-02-28T17:46:29.193960] SERVER STARTED SUCCESSFULLY
+[2026-02-28T17:46:29.198456] Flask app initialized at 2026-02-28T17:46:29.197683
+[2026-02-28T17:46:29.202065] ============================================================
+[2026-03-02T15:56:43.264353] ============================================================
+[2026-03-02T15:56:43.269962] SERVER STARTED SUCCESSFULLY
+[2026-03-02T15:56:43.273628] Flask app initialized at 2026-03-02T15:56:43.273031
+[2026-03-02T15:56:43.277253] ============================================================
+[2026-03-11T21:37:10.491028] ============================================================
+[2026-03-11T21:37:10.497076] SERVER STARTED SUCCESSFULLY
+[2026-03-11T21:37:10.501868] Flask app initialized at 2026-03-11T21:37:10.500380
+[2026-03-11T21:37:10.506840] ============================================================
+[2026-03-19T05:03:32.503025] ============================================================
+[2026-03-19T05:03:32.508271] SERVER STARTED SUCCESSFULLY
+[2026-03-19T05:03:32.511820] Flask app initialized at 2026-03-19T05:03:32.511105
+[2026-03-19T05:03:32.515753] ============================================================
+[2026-04-08T17:15:50.795604] ============================================================
+[2026-04-08T17:15:50.803120] SERVER STARTED SUCCESSFULLY
+[2026-04-08T17:15:50.807599] Flask app initialized at 2026-04-08T17:15:50.807037
+[2026-04-08T17:15:50.810455] ============================================================
+[2026-04-09T05:53:59.306284] ============================================================
+[2026-04-09T05:53:59.312264] SERVER STARTED SUCCESSFULLY
+[2026-04-09T05:53:59.316743] Flask app initialized at 2026-04-09T05:53:59.316160
+[2026-04-09T05:53:59.320534] ============================================================
+[2026-04-20T14:26:01.318761] ============================================================
+[2026-04-20T14:26:01.325334] SERVER STARTED SUCCESSFULLY
+[2026-04-20T14:26:01.330297] Flask app initialized at 2026-04-20T14:26:01.328496
+[2026-04-20T14:26:01.337827] ============================================================
+[2026-04-24T20:29:50.000565] ============================================================
+[2026-04-24T20:29:50.005124] SERVER STARTED SUCCESSFULLY
+[2026-04-24T20:29:50.012774] Flask app initialized at 2026-04-24T20:29:50.010032
+[2026-04-24T20:29:50.016528] ============================================================
+[2026-05-05T16:36:11.569684] ============================================================
+[2026-05-05T16:36:11.574680] SERVER STARTED SUCCESSFULLY
+[2026-05-05T16:36:11.578909] Flask app initialized at 2026-05-05T16:36:11.578330
+[2026-05-05T16:36:11.582541] ============================================================
+[2026-05-15T10:20:05.432283] ============================================================
+[2026-05-15T10:20:05.436909] SERVER STARTED SUCCESSFULLY
+[2026-05-15T10:20:05.441569] Flask app initialized at 2026-05-15T10:20:05.440900
+[2026-05-15T10:20:05.447020] ============================================================
+[2026-05-25T12:15:38.843407] ============================================================
+[2026-05-25T12:15:38.848465] SERVER STARTED SUCCESSFULLY
+[2026-05-25T12:15:38.853791] Flask app initialized at 2026-05-25T12:15:38.850738
+[2026-05-25T12:15:38.857406] ============================================================
+[2026-05-25T19:20:32.022544] ============================================================
+[2026-05-25T19:20:32.027929] SERVER STARTED SUCCESSFULLY
+[2026-05-25T19:20:32.031198] Flask app initialized at 2026-05-25T19:20:32.030483
+[2026-05-25T19:20:32.034766] ============================================================
+[2026-05-31T19:35:27.537324] ============================================================
+[2026-05-31T19:35:27.541465] SERVER STARTED SUCCESSFULLY
+[2026-05-31T19:35:27.544968] Flask app initialized at 2026-05-31T19:35:27.544411
+[2026-05-31T19:35:27.549471] ============================================================
+[2026-06-08T16:25:40.347302] ============================================================
+[2026-06-08T16:25:40.352750] SERVER STARTED SUCCESSFULLY
+[2026-06-08T16:25:40.356490] Flask app initialized at 2026-06-08T16:25:40.355873
+[2026-06-08T16:25:40.360338] ============================================================
+[2026-06-10T14:09:26.350409] ============================================================
+[2026-06-10T14:09:26.354614] SERVER STARTED SUCCESSFULLY
+[2026-06-10T14:09:26.358379] Flask app initialized at 2026-06-10T14:09:26.357785
+[2026-06-10T14:09:26.361926] ============================================================
+[2026-06-13T13:33:08.926933] ============================================================
+[2026-06-13T13:33:08.934942] SERVER STARTED SUCCESSFULLY
+[2026-06-13T13:33:08.939419] Flask app initialized at 2026-06-13T13:33:08.938332
+[2026-06-13T13:33:08.947577] ============================================================
+[2026-06-22T03:05:15.896290] ============================================================
+[2026-06-22T03:05:15.902564] SERVER STARTED SUCCESSFULLY
+[2026-06-22T03:05:15.907532] Flask app initialized at 2026-06-22T03:05:15.906380
+[2026-06-22T03:05:15.912079] ============================================================
+[2026-06-26T18:47:10.592012] 📦 Webhook received: refs/heads/master - 4f229c8
+[2026-06-26T18:47:10.602097]    Commit message: Update theme color and simplify brand logo structure in index.html
+
+- Changed theme color from #050816 to #050607 for better aesthetics.
+- Simplified brand logo structure by removing unnecessary div and directly using the image tag.
+- Adjusted button placement for geolocation functionality to improve UI consistency.
+[2026-06-26T18:47:10.607354] 🔄 Pulling latest code from GitHub...
+[2026-06-26T18:47:11.568505] ✓ Git pull successful
+[2026-06-26T18:47:11.573828]    Updating b258b21..4f229c8
+Fast-forward
+ static/app.js        |   38 +-
+ static/styles.css    | 1746 ++++++++++++++++++++++++++------------------------
+ templates/index.html |   15 +-
+ 3 files changed, 932 insertions(+), 867 deletions(-)
+[2026-06-26T18:47:11.578299] 📦 Installing dependencies...
+[2026-06-26T18:47:15.008536] ✓ Dependencies installed
+[2026-06-26T18:47:15.022516] ✓ Deployment complete, server reload scheduled
+[2026-06-26T18:47:17.024215] Starting webapp reload...
+[2026-06-26T18:47:22.604908] ============================================================
+[2026-06-26T18:47:22.608485] SERVER STARTED SUCCESSFULLY
+[2026-06-26T18:47:22.612437] Flask app initialized at 2026-06-26T18:47:22.611775
+[2026-06-26T18:47:22.616445] ============================================================
+[2026-07-03T14:01:15.521200] ============================================================
+[2026-07-03T14:01:15.526598] SERVER STARTED SUCCESSFULLY
+[2026-07-03T14:01:15.531328] Flask app initialized at 2026-07-03T14:01:15.530599
+[2026-07-03T14:01:15.538654] ============================================================
+[2026-07-10T11:06:23.021415] ============================================================
+[2026-07-10T11:06:23.025211] SERVER STARTED SUCCESSFULLY
+[2026-07-10T11:06:23.029438] Flask app initialized at 2026-07-10T11:06:23.028663
+[2026-07-10T11:06:23.033553] ============================================================
+[2026-07-13T16:21:28.766850] 📦 Webhook received: refs/heads/master - ff15dc9
+[2026-07-13T16:21:28.772250]    Commit message: feat: Update README with author credit and add a catchy tagline
+[2026-07-13T16:21:28.776514] 🔄 Pulling latest code from GitHub...
+[2026-07-13T16:21:29.781497] ✓ Git pull successful
+[2026-07-13T16:21:29.785948]    Updating 4f229c8..ff15dc9
+Fast-forward
+ CHANGELOG.md | 114 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ README.md    |   4 ++-
+ 2 files changed, 117 insertions(+), 1 deletion(-)
+ create mode 100644 CHANGELOG.md
+[2026-07-13T16:21:29.789180] 📦 Installing dependencies...
+[2026-07-13T16:21:32.728129] ✓ Dependencies installed
+[2026-07-13T16:21:32.734590] ✓ Deployment complete, server reload scheduled
+[2026-07-13T16:21:34.736457] Starting webapp reload...
+[2026-07-13T16:21:40.311846] ============================================================
+[2026-07-13T16:21:40.316801] SERVER STARTED SUCCESSFULLY
+[2026-07-13T16:21:40.321340] Flask app initialized at 2026-07-13T16:21:40.320770
+[2026-07-13T16:21:40.325848] ============================================================
+[2026-07-13T17:23:11.000865] 📦 Webhook received: refs/heads/master - 45df74f
+[2026-07-13T17:23:11.004961]    Commit message: feat: Update deployment log handling and synchronization with GitHub
+[2026-07-13T17:23:11.008815] 🔄 Pulling latest code from GitHub...
+[2026-07-13T17:23:11.827165] ✓ Git pull successful
+[2026-07-13T17:23:11.831169]    Updating ff15dc9..45df74f
+Fast-forward
+ app.py | 43 ++++++++++++++++++++++++++++---------------
+ 1 file changed, 28 insertions(+), 15 deletions(-)
+[2026-07-13T17:23:11.837300] 📦 Installing dependencies...
+[2026-07-13T17:23:14.245216] ✓ Dependencies installed
+[2026-07-13T17:23:14.249487] ✓ Deployment complete, server reload scheduled
+[2026-07-13T17:23:16.251314] Starting webapp reload...
+[2026-07-13T17:23:21.653113] ============================================================
+[2026-07-13T17:23:21.657280] SERVER STARTED SUCCESSFULLY
+[2026-07-13T17:23:21.662683] Flask app initialized at 2026-07-13T17:23:21.661525
+[2026-07-13T17:23:21.667762] ============================================================
+[2026-07-13T17:35:53.631156] 📦 Webhook received: refs/heads/master - 7806f74
+[2026-07-13T17:35:53.636057]    Commit message: feat: Enhance GitHub log synchronization with detailed debug logging
+[2026-07-13T17:35:53.639881] 🔄 Pulling latest code from GitHub...
+[2026-07-13T17:35:54.426110] ✓ Git pull successful
+[2026-07-13T17:35:54.429963]    Updating 45df74f..7806f74
+Fast-forward
+ app.py | 42 +++++++++++++++++++++++++++---------------
+ 1 file changed, 27 insertions(+), 15 deletions(-)
+[2026-07-13T17:35:54.434283] 📦 Installing dependencies...
+[2026-07-13T17:35:57.062128] ✓ Dependencies installed
+[2026-07-13T17:35:57.066566] ✓ Deployment complete, server reload scheduled
+[2026-07-13T17:35:59.070791] Starting webapp reload...
+[2026-07-13T17:36:07.409241] ============================================================
+[2026-07-13T17:36:07.413367] SERVER STARTED SUCCESSFULLY
+[2026-07-13T17:36:07.419168] Flask app initialized at 2026-07-13T17:36:07.418549
+[2026-07-13T17:36:07.423213] ============================================================
+[2026-07-13T17:36:07.432352] DEBUG: deployment flag exists = False
+[2026-07-13T17:39:49.580249] 📦 Webhook received: refs/heads/master - cbc74d3
+[2026-07-13T17:39:49.585685]    Commit message: fix: Update deployment flag path to use project directory and add debug logging
+[2026-07-13T17:39:49.589850] 🔄 Pulling latest code from GitHub...
+[2026-07-13T17:39:50.366203] ✓ Git pull successful
+[2026-07-13T17:39:50.371011]    Updating 7806f74..cbc74d3
+Fast-forward
+ app.py | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+[2026-07-13T17:39:50.375889] 📦 Installing dependencies...
+[2026-07-13T17:39:53.073440] ✓ Dependencies installed
+[2026-07-13T17:39:53.078066] ✓ Deployment complete, server reload scheduled
+[2026-07-13T17:39:55.080555] Starting webapp reload...
+[2026-07-13T17:40:03.979442] ============================================================
+[2026-07-13T17:40:03.985292] SERVER STARTED SUCCESSFULLY
+[2026-07-13T17:40:03.991281] Flask app initialized at 2026-07-13T17:40:03.988777
+[2026-07-13T17:40:03.998207] ============================================================
+[2026-07-13T17:40:04.012245] DEBUG: deployment flag exists = False
+[2026-07-13T18:22:37.843197] 📦 Webhook received: refs/heads/master - 4c86328
+[2026-07-13T18:22:37.849187]    Commit message: feat: Implement log synchronization with GitHub in sync_logs.py
+[2026-07-13T18:22:37.853268] 🔄 Pulling latest code from GitHub...
+[2026-07-13T18:22:38.627111] ✓ Git pull successful
+[2026-07-13T18:22:38.631964]    Updating cbc74d3..4c86328
+Fast-forward
+ app.py       | 59 +----------------------------------------------------------
+ sync_logs.py | 52 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 53 insertions(+), 58 deletions(-)
+ create mode 100644 sync_logs.py
+[2026-07-13T18:22:38.636344] 📦 Installing dependencies...
+[2026-07-13T18:22:41.436395] ✓ Dependencies installed
+[2026-07-13T18:22:41.440767] ✓ Deployment complete, server reload scheduled
+[2026-07-13T18:22:43.442705] Starting webapp reload...
+[2026-07-13T18:22:43.454410] DEBUG: created /home/tanishqmudaliar/Weather-Monitoring-System/.deployment_pending
+[2026-07-13T18:22:43.458784] DEBUG: exists before reload = True
+[2026-07-13T18:22:48.120072] ============================================================
+[2026-07-13T18:22:48.122947] SERVER STARTED SUCCESSFULLY
+[2026-07-13T18:22:48.126727] Flask app initialized at 2026-07-13T18:22:48.126129
+[2026-07-13T18:22:48.130501] ============================================================
