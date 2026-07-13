@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-07-14
+
+### Added
+
+- Automatic GitHub webhook-based deployment pipeline for PythonAnywhere.
+- Secure HMAC verification for GitHub webhook requests.
+- Live deployment log viewer available at `/deployment-log`.
+- Automatic dependency installation during deployments.
+- Automatic web application reload after successful deployments.
+- Deployment logging with timestamps for every deployment stage.
+- Scheduled deployment log synchronization back to GitHub.
+
+### Changed
+
+- Reworked the deployment architecture for improved reliability and maintainability.
+- Simplified deployment workflow by separating deployment execution and log synchronization.
+- Improved deployment diagnostics and server startup logging.
+- Refined webhook handling and deployment status reporting.
+
+### Security
+
+- Secured deployment endpoint using GitHub webhook signature validation.
+- Improved handling of deployment credentials through environment variables.
+
+### Fixed
+
+- Improved deployment stability during application reloads.
+- Resolved issues with deployment log persistence and synchronization.
+
 ## [1.5.1] - 2026-06-27
 
 ### Changed
@@ -102,7 +131,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README, `requirements.txt`, and MIT LICENSE
 - `.gitignore` for environment files
 
-[Unreleased]: https://github.com/tanishqmudaliar/Weather-Monitoring-System/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/tanishqmudaliar/Weather-Monitoring-System/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/tanishqmudaliar/Weather-Monitoring-System/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/tanishqmudaliar/Weather-Monitoring-System/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/tanishqmudaliar/Weather-Monitoring-System/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/tanishqmudaliar/Weather-Monitoring-System/compare/v1.4.0...v1.4.1
