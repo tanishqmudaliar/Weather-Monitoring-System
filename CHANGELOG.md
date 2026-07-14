@@ -11,30 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Automatic GitHub webhook-based deployment pipeline for PythonAnywhere.
-- Secure HMAC verification for GitHub webhook requests.
-- Live deployment log viewer available at `/deployment-log`.
-- Automatic dependency installation during deployments.
-- Automatic web application reload after successful deployments.
-- Deployment logging with timestamps for every deployment stage.
-- Scheduled deployment log synchronization back to GitHub.
+- Standalone `sync_logs.py` script that syncs the deployment log to GitHub, using a content hash to skip commits when nothing changed
+- Author credit and tagline added to the README
 
 ### Changed
 
-- Reworked the deployment architecture for improved reliability and maintainability.
-- Simplified deployment workflow by separating deployment execution and log synchronization.
-- Improved deployment diagnostics and server startup logging.
-- Refined webhook handling and deployment status reporting.
-
-### Security
-
-- Secured deployment endpoint using GitHub webhook signature validation.
-- Improved handling of deployment credentials through environment variables.
+- Reworked how the deployment log gets pushed to GitHub after a PythonAnywhere reload — moved from an in-request background thread to a flag-file handoff, then replaced with the external sync script
+- Relocated the deployment flag file from `/tmp` into the project directory so it survives across reloads
 
 ### Fixed
 
-- Improved deployment stability during application reloads.
-- Resolved issues with deployment log persistence and synchronization.
+- Flag-file path bug that could cause a log sync to be missed after a reload
+
+**Full Changelog**: https://github.com/tanishqmudaliar/Weather-Monitoring-System/compare/v1.5.1...v1.6.0
 
 ## [1.5.1] - 2026-06-27
 
