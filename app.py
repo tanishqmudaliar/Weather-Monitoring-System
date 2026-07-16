@@ -97,7 +97,7 @@ def github_webhook():
     commit_msg = payload.get('head_commit', {}).get('message', '')
     commit_id = payload.get('head_commit', {}).get('id', 'unknown')[:7]
 
-    # Ignore commits that start with [LOGS] to prevent infinite loops
+    # Ignore commits that start with [LOGS] to prevent infinite loop cycle
     if commit_msg.startswith("[LOGS]"):
         return jsonify({'status': 'ignored', 'reason': 'Log commit'}), 200
 
