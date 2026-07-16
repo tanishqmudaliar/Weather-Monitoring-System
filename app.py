@@ -99,7 +99,6 @@ def github_webhook():
 
     # Ignore commits that start with [LOGS] to prevent infinite loops
     if commit_msg.startswith("[LOGS]"):
-        # log_deployment(f"Ignoring log commit: {commit_id} - {commit_msg}") # caused a infinite loop of deployments
         return jsonify({'status': 'ignored', 'reason': 'Log commit'}), 200
 
     if ref not in ['refs/heads/master', 'refs/heads/main']:
