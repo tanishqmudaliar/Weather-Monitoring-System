@@ -110,16 +110,24 @@ def github_webhook():
     try:
         # Pull latest code from GitHub
         log_deployment("🔄 Pulling latest code from GitHub...")
-        pull_result = subprocess.run(
-            ['git', 'pull', 'origin', 'master'],
+
+        subprocess.run(
+            ['git', 'fetch', 'origin'],
             cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
         )
+
+        pull_result = subprocess.run(
+            ['git', 'reset', '--hard', 'origin/master'],
+            cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
+        )
+
         if pull_result.returncode == 0:
             log_deployment(f"✓ Git pull successful")
             log_deployment(f"   {pull_result.stdout.strip()}")
         else:
             log_deployment(f"✗ Git pull failed: {pull_result.stderr}")
             return jsonify({'error': 'Git pull failed', 'details': pull_result.stderr}), 500
+
     except Exception as e:
         log_deployment(f"✗ Git pull error: {str(e)}")
         return jsonify({'error': str(e)}), 500
