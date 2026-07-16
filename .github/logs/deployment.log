@@ -354,3 +354,37 @@ Fast-forward
 [2026-07-13T18:22:48.122947] SERVER STARTED SUCCESSFULLY
 [2026-07-13T18:22:48.126727] Flask app initialized at 2026-07-13T18:22:48.126129
 [2026-07-13T18:22:48.130501] ============================================================
+[2026-07-13T18:33:18.005045] Ignoring log commit: 92c9bf6 - [LOGS] 2026-07-13 18:33:11
+[2026-07-13T18:39:02.655727] 📦 Webhook received: refs/heads/master - f55e307
+[2026-07-13T18:39:02.661070]    Commit message: Merge branch master of https://github.com/tanishqmudaliar/Weather-Monitoring-System
+[2026-07-13T18:39:02.665095] 🔄 Pulling latest code from GitHub...
+[2026-07-13T18:39:03.532925] ✓ Git pull successful
+[2026-07-13T18:39:03.537185]    Updating 92c9bf6..f55e307
+Fast-forward
+ CHANGELOG.md | 32 +++++++++++++++++++++++++++++++-
+ 1 file changed, 31 insertions(+), 1 deletion(-)
+[2026-07-13T18:39:03.543108] 📦 Installing dependencies...
+[2026-07-13T18:39:05.835187] ✓ Dependencies installed
+[2026-07-13T18:39:05.839652] ✓ Deployment complete, server reload scheduled
+[2026-07-13T18:39:07.841951] Starting webapp reload...
+[2026-07-13T18:39:14.703792] ============================================================
+[2026-07-13T18:39:14.707931] SERVER STARTED SUCCESSFULLY
+[2026-07-13T18:39:14.711934] Flask app initialized at 2026-07-13T18:39:14.711196
+[2026-07-13T18:39:14.715364] ============================================================
+[2026-07-14T13:39:25.649561] 📦 Webhook received: refs/heads/master - 27d5aa9
+[2026-07-14T13:39:25.657359]    Commit message: feat: Update CHANGELOG for version 1.6.0 with new features and improvements
+[2026-07-14T13:39:25.663119] 🔄 Pulling latest code from GitHub...
+[2026-07-14T13:39:26.651911] ✓ Git pull successful
+[2026-07-14T13:39:26.656198]    Updating f55e307..27d5aa9
+Fast-forward
+ CHANGELOG.md | 25 +++++++------------------
+ 1 file changed, 7 insertions(+), 18 deletions(-)
+[2026-07-14T13:39:26.660321] 📦 Installing dependencies...
+[2026-07-14T13:39:32.680847] ✓ Dependencies installed
+[2026-07-14T13:39:32.695804] ✓ Deployment complete, server reload scheduled
+[2026-07-14T13:39:34.702211] Starting webapp reload...
+[2026-07-14T13:39:40.632116] ============================================================
+[2026-07-14T13:39:40.638692] SERVER STARTED SUCCESSFULLY
+[2026-07-14T13:39:40.642235] Flask app initialized at 2026-07-14T13:39:40.641611
+[2026-07-14T13:39:40.646198] ============================================================
+[2026-07-14T18:31:17.868540] Ignoring log commit: 015de67 - [LOGS] 2026-07-14 18:31:08
