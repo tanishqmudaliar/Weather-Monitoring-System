@@ -386,4 +386,19 @@ Fast-forward
 [2026-07-14T13:39:40.632116] ============================================================
 [2026-07-14T13:39:40.638692] SERVER STARTED SUCCESSFULLY
 [2026-07-14T13:39:40.642235] Flask app initialized at 2026-07-14T13:39:40.641611
-[2026-07-14T13:39:40.646198] ============================================================
+[2026-07-14T13:39:40.646198] ============================================================[2026-07-16T13:03:48.008347] 📦 Webhook received: refs/heads/master - 0a4caa8
+[2026-07-16T13:03:48.013380]    Commit message: fix: Update Git pull mechanism to use reset instead of pull for better deployment handling
+[2026-07-16T13:03:48.020121] 🔄 Pulling latest code from GitHub...
+[2026-07-16T13:03:48.951940] ✓ Git pull successful
+[2026-07-16T13:03:48.956559]    Updating 5a11395..0a4caa8
+Fast-forward
+ app.py | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+[2026-07-16T13:03:48.960720] 📦 Installing dependencies...
+[2026-07-16T13:03:51.046870] ✓ Dependencies installed
+[2026-07-16T13:03:51.051491] ✓ Deployment complete, server reload scheduled
+[2026-07-16T13:03:53.053213] Starting webapp reload...
+[2026-07-16T13:03:57.980489] ============================================================
+[2026-07-16T13:03:57.984142] SERVER STARTED SUCCESSFULLY
+[2026-07-16T13:03:57.988567] Flask app initialized at 2026-07-16T13:03:57.987739
+[2026-07-16T13:03:57.992128] ============================================================
