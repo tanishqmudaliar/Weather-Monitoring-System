@@ -2,6 +2,7 @@ import os
 import subprocess
 import hmac
 import hashlib
+import html
 import threading
 import requests
 import time
@@ -21,15 +22,16 @@ PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 DEPLOYMENT_LOG = f"{PROJECT_PATH}/.github/logs/deployment.log"
+RUNTIME_LOG = f"{PROJECT_PATH}/.github/logs/runtime.log"
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 
 
-def log_deployment(message):
+def log_deployment(message, log_file=DEPLOYMENT_LOG):
     """Write deployment events to log file"""
     try:
         # Create logs directory if it doesn't exist
-        os.makedirs(os.path.dirname(DEPLOYMENT_LOG), exist_ok=True)
-        with open(DEPLOYMENT_LOG, 'a') as f:
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        with open(log_file, 'a') as f:
             timestamp = datetime.now().isoformat()
             f.write(f"[{timestamp}] {message}\n")
     except Exception as e:
@@ -64,11 +66,13 @@ def reload_webapp_async(delay=3):
     thread.start()
 
 
-# Log server startup
-log_deployment("=" * 60)
-log_deployment("SERVER STARTED SUCCESSFULLY")
-log_deployment(f"Flask app initialized at {datetime.now().isoformat()}")
-log_deployment("=" * 60)
+# Fires on every process start (idle sleep/wake, crash recovery,
+# manual reload) — not just real deploys, so it stays local and
+# never touches the git-tracked deployment.log
+log_deployment("=" * 60, log_file=RUNTIME_LOG)
+log_deployment("SERVER STARTED SUCCESSFULLY", log_file=RUNTIME_LOG)
+log_deployment(f"Flask app initialized at {datetime.now().isoformat()}", log_file=RUNTIME_LOG)
+log_deployment("=" * 60, log_file=RUNTIME_LOG)
 
 
 @app.route('/github-webhook', methods=['POST'])
@@ -161,7 +165,7 @@ def view_deployment_log():
     """View deployment log for debugging"""
     try:
         with open(DEPLOYMENT_LOG, 'r') as f:
-            logs = f.read()
+            logs = html.escape(f.read())
             
         return f"""
         <html>
@@ -176,6 +180,30 @@ def view_deployment_log():
         
     except FileNotFoundError:
         return "No deployment log found", 404
+    except Exception as e:
+        return f"Error: {e}", 500
+
+
+@app.route('/runtime-log')
+def view_runtime_log():
+    """View runtime (server start/wake) log for debugging"""
+    try:
+        with open(RUNTIME_LOG, 'r') as f:
+            logs = html.escape(f.read())
+            
+        return f"""
+        <html>
+            <head>
+                <title>WeatherPro Intelligence | Premium Weather Platform</title>
+            </head>
+            <body>
+                <pre>{logs}</pre>
+            </body>
+        </html>
+        """, 200
+        
+    except FileNotFoundError:
+        return "No runtime log found", 404
     except Exception as e:
         return f"Error: {e}", 500
 

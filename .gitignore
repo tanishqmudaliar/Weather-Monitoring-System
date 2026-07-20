@@ -3,3 +3,4 @@
 __pycache__/
 *.pyc
 *.env
+.github/logs/runtime.log
