@@ -29,11 +29,23 @@ BASE_URL = "https://api.openweathermap.org/data/2.5"
 def log_deployment(message, log_file=DEPLOYMENT_LOG):
     """Write deployment events to log file"""
     try:
-        # Create logs directory if it doesn't exist
         os.makedirs(os.path.dirname(log_file), exist_ok=True)
-        with open(log_file, 'a') as f:
+        with open(log_file, 'a+') as f:
+            # Self-heal: if a previous write got cut short (e.g. process
+            # killed mid-reload before the OS/NFS flush landed), make sure
+            # this entry still starts on its own line instead of merging.
+            f.seek(0, os.SEEK_END)
+            if f.tell() > 0:
+                f.seek(f.tell() - 1)
+                if f.read(1) != '\n':
+                    f.write('\n')
             timestamp = datetime.now().isoformat()
             f.write(f"[{timestamp}] {message}\n")
+            # Force this write to disk now, since the webapp reload
+            # triggered right after logging can kill the process
+            # before Python's/OS's normal buffering would flush it.
+            f.flush()
+            os.fsync(f.fileno())
     except Exception as e:
         print(f"Failed to write log: {e}")
 
@@ -42,6 +54,8 @@ def reload_webapp_async(delay=3):
     """Reload webapp after delay in background thread"""
 
     def do_reload():
+        # Small delay lets the current response finish sending before
+        # the worker process gets torn down for the reload.
         time.sleep(delay)
         log_deployment("Starting webapp reload...")
 
@@ -79,6 +93,7 @@ log_deployment("=" * 60, log_file=RUNTIME_LOG)
 def github_webhook():
     """Handle GitHub webhook for auto-deployment"""
     if WEBHOOK_SECRET:
+        # Verify the payload actually came from GitHub before doing anything
         signature = request.headers.get('X-Hub-Signature-256', '')
         expected_sig = 'sha256=' + hmac.new(
             WEBHOOK_SECRET.encode(), request.data, hashlib.sha256
@@ -120,6 +135,8 @@ def github_webhook():
             cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
         )
 
+        # Hard reset instead of a plain pull so a dirty working tree
+        # (e.g. leftover log commits) can never cause a merge conflict
         pull_result = subprocess.run(
             ['git', 'reset', '--hard', 'origin/master'],
             cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
@@ -166,7 +183,7 @@ def view_deployment_log():
     try:
         with open(DEPLOYMENT_LOG, 'r') as f:
             logs = html.escape(f.read())
-            
+
         return f"""
         <html>
             <head>
@@ -177,7 +194,7 @@ def view_deployment_log():
             </body>
         </html>
         """, 200
-        
+
     except FileNotFoundError:
         return "No deployment log found", 404
     except Exception as e:
@@ -190,7 +207,7 @@ def view_runtime_log():
     try:
         with open(RUNTIME_LOG, 'r') as f:
             logs = html.escape(f.read())
-            
+
         return f"""
         <html>
             <head>
@@ -201,7 +218,7 @@ def view_runtime_log():
             </body>
         </html>
         """, 200
-        
+
     except FileNotFoundError:
         return "No runtime log found", 404
     except Exception as e:
@@ -264,7 +281,8 @@ def get_current_weather():
 
         data = response.json()
 
-        # Fetch UV index from Open-Meteo (free API)
+        # OpenWeatherMap doesn't include UV, so pull it from a second,
+        # free API using the coordinates we already have
         lat = data['coord']['lat']
         lon = data['coord']['lon']
         uv_index = get_uv_index_from_open_meteo(lat, lon)
@@ -311,7 +329,7 @@ def get_forecast():
     if not location:
         return jsonify({"error": "Location required"}), 400
 
-    # Get coordinates
+    # Geocode first since the forecast endpoint needs lat/lon, not a name
     geo_url = f"https://api.openweathermap.org/geo/1.0/direct?q={location}&limit=1&appid={API_KEY}"
 
     try:
@@ -390,6 +408,8 @@ def get_air_quality():
             aqi_data = data['list'][0]
             components = aqi_data.get('components', {})
 
+            # Prefer converting PM2.5 to the US EPA scale; fall back to
+            # OWM's own 1-5 index (scaled) if PM2.5 isn't available
             pm25 = components.get('pm2_5', 0)
             us_aqi = calculate_us_aqi_from_pm25(pm25) if pm25 > 0 else aqi_data['main']['aqi'] * 50
 
@@ -415,6 +435,8 @@ def get_air_quality():
 
 def calculate_us_aqi_from_pm25(pm25):
     """Convert PM2.5 to US EPA AQI scale"""
+    # Each tuple is (conc_low, conc_high, aqi_low, aqi_high) for one
+    # EPA breakpoint band; we linearly interpolate within the matching band
     breakpoints = [
         (0, 12.0, 0, 50),
         (12.1, 35.4, 51, 100),

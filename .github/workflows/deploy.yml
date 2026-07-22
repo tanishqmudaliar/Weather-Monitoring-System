@@ -1,5 +1,6 @@
 name: Deploy to PythonAnywhere
 
+# Any push to master/main tells PythonAnywhere to pull and reload
 on:
   push:
     branches:
@@ -9,10 +10,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Trigger PythonAnywhere Deployment
         run: |
+          # Sign the payload the same way the Flask app verifies it,
+          # so the webhook can confirm this request actually came from here
           RESPONSE=$(curl -X POST \
             -H "Content-Type: application/json" \
             -H "X-GitHub-Event: push" \
@@ -20,19 +23,23 @@ jobs:
             -d '${{ toJson(github.event) }}' \
             -w "\nHTTP_CODE:%{http_code}" \
             ${{ secrets.PYTHONANYWHERE_WEBHOOK_URL }})
-          
+
+          # -w above appends the status code as an extra line; split it
+          # back out from the actual response body before reading either
           HTTP_CODE=$(echo "$RESPONSE" | grep "HTTP_CODE" | cut -d':' -f2)
           BODY=$(echo "$RESPONSE" | sed '/HTTP_CODE/d')
-          
+
           echo "Response: $BODY"
           echo "HTTP Code: $HTTP_CODE"
-          
+
+          # Fail the Action outright on a bad status so a broken deploy
+          # shows up red in GitHub instead of silently succeeding
           if [ "$HTTP_CODE" != "200" ]; then
             echo "Deployment failed with HTTP code $HTTP_CODE"
             exit 1
           fi
-          
-          # Check if response contains "ok" status
+
+          # Status 200 can still carry an app-level failure in the body
           if echo "$BODY" | grep -q '"status".*"ok"'; then
             echo "✓ Deployment successful!"
           else
