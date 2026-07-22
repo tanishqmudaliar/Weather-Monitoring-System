@@ -356,3 +356,9 @@ Fast-forward
 [2026-07-22T14:59:40.553238] SERVER STARTED SUCCESSFULLY
 [2026-07-22T14:59:40.557225] Flask app initialized at 2026-07-22T14:59:40.556697
 [2026-07-22T14:59:40.560995] ============================================================
+[2026-07-22T15:19:08.086633] ✓ Git pull successful
+[2026-07-22T15:19:08.090662]    HEAD is now at 773bbbe feat: Add deployment flag handling and update log paths
+[2026-07-22T15:19:08.095108] 📦 Installing dependencies...
+[2026-07-22T15:19:10.050535] ✓ Dependencies installed
+[2026-07-22T15:19:10.055551] ✓ Deployment complete, server reload scheduled
+[2026-07-22T15:19:12.061672] Starting webapp reload...
