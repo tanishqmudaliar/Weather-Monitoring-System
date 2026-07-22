@@ -23,6 +23,7 @@ PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 DEPLOYMENT_LOG = f"{PROJECT_PATH}/.github/logs/deployment.log"
 RUNTIME_LOG = f"{PROJECT_PATH}/.github/logs/runtime.log"
+DEPLOY_FLAG = f"{PROJECT_PATH}/.deployment_pending"
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 
 
@@ -87,6 +88,13 @@ log_deployment("=" * 60, log_file=RUNTIME_LOG)
 log_deployment("SERVER STARTED SUCCESSFULLY", log_file=RUNTIME_LOG)
 log_deployment(f"Flask app initialized at {datetime.now().isoformat()}", log_file=RUNTIME_LOG)
 log_deployment("=" * 60, log_file=RUNTIME_LOG)
+
+# Only true right after a webhook-triggered reload — an idle wake,
+# crash recovery, or manual reload won't have this flag, so those
+# stay confined to runtime.log as before.
+if os.path.exists(DEPLOY_FLAG):
+    log_deployment("✓ Server restarted successfully")
+    os.remove(DEPLOY_FLAG)
 
 
 @app.route('/github-webhook', methods=['POST'])
@@ -163,6 +171,11 @@ def github_webhook():
         log_deployment("✓ Dependencies installed")
     except Exception as e:
         log_deployment(f"⚠ Pip install warning: {str(e)}")
+
+    # Signal to whichever process comes up after the reload below that
+    # this restart was deployment-triggered, not an idle wake/crash/
+    # manual reload (see startup block, which checks and clears this).
+    open(DEPLOY_FLAG, 'w').close()
 
     # Schedule webapp reload
     reload_webapp_async(delay=2)
