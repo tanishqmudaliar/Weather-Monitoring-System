@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-07-27
+
+### Added
+
+- `/runtime-log` endpoint and a separate `runtime.log` file, tracking server start/wake events (idle wake, crash recovery, manual reload) independently of real deploys
+- Git diffstat output in the deployment log showing exactly what changed between old and new HEAD after each pull
+- File locking (`fcntl.flock`) around git operations so the webhook's deploy and the log-sync script can never interleave
+- Deployment flag file (`.deployment_pending`) so the post-restart startup log can tell a real deploy apart from an idle wake or manual reload
+
+### Changed
+
+- Git pull mechanism switched from `git pull` to `git fetch` + `git reset --hard origin/master`, so a dirty working tree can never cause a merge conflict
+- `sync_logs.py` no longer commits the live `deployment.log` directly — it now hashes its content and snapshots changes into a new tracked file, `deployment-history.log`
+- `log_deployment()` now flushes and fsyncs every write immediately, so an entry survives even if the process is killed by a reload right after logging
+- Deployment/runtime log output is now HTML-escaped before being rendered
+- GitHub Actions deploy workflow now fails outright on a non-200 response instead of just warning
+
+### Fixed
+
+- Bug where `[LOGS]` auto-commits could still re-trigger a deployment log entry, causing repeated deploy cycles
+- `deployment.log` is no longer tracked in git at all (fully gitignored), removing the need to auto-commit it during deploys
+
+**Full Changelog**: https://github.com/tanishqmudaliar/Weather-Monitoring-System/compare/v1.6.0...v1.7.0
+
 ## [1.6.0] - 2026-07-14
 
 ### Added

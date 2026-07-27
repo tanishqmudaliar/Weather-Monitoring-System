@@ -370,10 +370,11 @@ Set up [PythonAnywhere-Auto-Renew](https://github.com/tanishqmudaliar/PythonAnyw
 
 ### Deployment Endpoint
 
-| Endpoint          | Method | Description                                                              |
-| ----------------- | ------ | ------------------------------------------------------------------------ |
-| `/github-webhook` | POST   | Receives deployment request from GitHub Actions, pulls code, reloads app |
-| `/deployment-log` | GET    | View deployment log (debugging)                                          |
+| Endpoint          | Method | Description                                                                     |
+| ----------------- | ------ | ------------------------------------------------------------------------------- |
+| `/github-webhook` | POST   | Receives deployment request from GitHub Actions, pulls code, reloads app        |
+| `/deployment-log` | GET    | View deployment log (debugging)                                                 |
+| `/runtime-log`    | GET    | View runtime log — server start/wake events, independent of deploys (debugging) |
 
 ### Example Request
 
@@ -420,7 +421,7 @@ curl "https://tanishqmudaliar.pythonanywhere.com/api/current-weather?location=Mu
 ```
 Weather-Monitoring-System/
 ├── .github/
-│   ├── logs/                   # Deployment logs (gitignored)
+│   ├── logs/                   # Runtime & live deployment logs (gitignored); deployment-history.log is tracked
 │   └── workflows/
 │       └── deploy.yml          # CI/CD workflow
 ├── static/
