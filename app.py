@@ -177,15 +177,28 @@ def github_webhook():
 
             if pull_result.returncode == 0:
                 log_deployment(f"✓ Git pull successful")
-                log_deployment(f"   {pull_result.stdout.strip()}")
 
-                # reset --hard doesn't print what changed, so diff it manually
+                new_head = subprocess.run(
+                    ['git', 'rev-parse', 'HEAD'],
+                    cwd=PROJECT_PATH, capture_output=True, text=True, timeout=10
+                ).stdout.strip()
+
                 diffstat = subprocess.run(
-                    ['git', 'diff', '--stat', old_head, 'HEAD'],
+                    ['git', 'diff', '--stat', old_head, new_head],
                     cwd=PROJECT_PATH, capture_output=True, text=True, timeout=10
                 )
                 if diffstat.stdout.strip():
-                    log_deployment(diffstat.stdout.strip())
+                    # Single log_deployment call → one timestamp on "Updating...",
+                    # everything else rides along as bare lines. Fast-forward is
+                    # cosmetic (reset --hard doesn't guarantee it) but kept for the
+                    # familiar git-pull look.
+                    log_deployment(
+                        f"   Updating {old_head[:7]}..{new_head[:7]}\n"
+                        f"Fast-forward\n"
+                        f"{diffstat.stdout.strip()}"
+                    )
+
+                log_deployment(f"   {pull_result.stdout.strip()}")
             else:
                 log_deployment(f"✗ Git pull failed: {pull_result.stderr}")
                 return jsonify({'error': 'Git pull failed', 'details': pull_result.stderr}), 500
