@@ -5,4 +5,5 @@ __pycache__/
 *.env
 .github/logs/runtime.log
 .deployment_pending
+.github/logs/.deployment.hash.github/logs/deployment.log
 .github/logs/.deployment.hash
