@@ -1,6 +1,7 @@
 import hashlib
 import os
 import subprocess
+import fcntl
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
@@ -13,6 +14,10 @@ PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 PROJECT = Path(f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System")
 LOG = PROJECT / ".github/logs/deployment.log"
 HASH_FILE = PROJECT / ".github/logs/.deployment.hash"
+# Same lock file app.py holds around its git fetch/reset, so this
+# script's add/commit/push can never interleave with a deploy's git
+# operations on the same working tree.
+LOCK_FILE = PROJECT / ".git/deploy.lock"
 
 # No deployment.log yet means the app hasn't logged anything on this
 # machine (fresh clone, first boot) — nothing to sync, so exit quietly
@@ -20,57 +25,68 @@ HASH_FILE = PROJECT / ".github/logs/.deployment.hash"
 if not LOG.exists():
     raise SystemExit(0)
 
-# Hash the content rather than checking mtime/size: PythonAnywhere can
-# touch the file (reload, filesystem sync) without the content actually
-# changing, and mtime alone would trigger pointless commits.
-current_hash = hashlib.sha256(LOG.read_bytes()).hexdigest()
+lock_fd = open(LOCK_FILE, "w")
+fcntl.flock(lock_fd, fcntl.LOCK_EX)
 
-# No hash file yet = first run on this machine. old_hash stays "",
-# which never matches a real sha256 digest, so the first run always
-# falls through and commits whatever log content currently exists.
-old_hash = ""
-if HASH_FILE.exists():
-    old_hash = HASH_FILE.read_text().strip()
+try:
+    # Hash the content rather than checking mtime/size: PythonAnywhere can
+    # touch the file (reload, filesystem sync) without the content actually
+    # changing, and mtime alone would trigger pointless commits.
+    current_hash = hashlib.sha256(LOG.read_bytes()).hexdigest()
 
-# Nothing changed since the last sync — skip straight to exit so we
-# never create an empty commit.
-if current_hash == old_hash:
-    raise SystemExit(0)
+    # No hash file yet = first run on this machine. old_hash stays "",
+    # which never matches a real sha256 digest, so the first run always
+    # falls through and commits whatever log content currently exists.
+    old_hash = ""
+    if HASH_FILE.exists():
+        old_hash = HASH_FILE.read_text().strip()
 
-# check=True here on purpose: staging should never fail under normal
-# conditions, so treat it as fatal if it does rather than silently
-# continuing with a dirty/unstaged log file.
-subprocess.run(
-    ["git", "add", ".github/logs/deployment.log"],
-    cwd=PROJECT,
-    check=True
-)
+    # Nothing changed since the last sync — skip straight to exit so we
+    # never create an empty commit.
+    if current_hash == old_hash:
+        raise SystemExit(0)
 
-# No check=True: git commit exits non-zero when there's nothing staged
-# to commit. That's used as a signal below (skip the push) rather than
-# treated as a failure that should crash the script.
-commit = subprocess.run(
-    [
-        "git",
-        "commit",
-        "-m",
-        f"[LOGS] {datetime.now():%Y-%m-%d %H:%M:%S}"
-    ],
-    cwd=PROJECT
-)
-
-# Only push if a commit was actually created, so we're never pushing
-# when there's nothing new for the remote.
-if commit.returncode == 0:
+    # check=True here on purpose: staging should never fail under normal
+    # conditions, so treat it as fatal if it does rather than silently
+    # continuing with a dirty/unstaged log file.
     subprocess.run(
-        ["git", "push", "origin", "master"],
+        ["git", "add", ".github/logs/deployment.log"],
         cwd=PROJECT,
         check=True
     )
 
-# Written unconditionally after the block above — including when the
-# commit step failed for a reason other than "nothing to commit" (e.g.
-# git identity not configured). In that case this run's log content
-# is marked as synced even though it never made it to the remote, and
-# won't be retried on the next run.
-HASH_FILE.write_text(current_hash)
+    # No check=True: git commit exits non-zero when there's nothing staged
+    # to commit. That's used as a signal below (skip the push) rather than
+    # treated as a failure that should crash the script.
+    commit = subprocess.run(
+        [
+            "git",
+            "commit",
+            "-m",
+            f"[LOGS] {datetime.now():%Y-%m-%d %H:%M:%S}"
+        ],
+        cwd=PROJECT
+    )
+
+    # Only push if a commit was actually created, so we're never pushing
+    # when there's nothing new for the remote.
+    if commit.returncode == 0:
+        push = subprocess.run(
+            ["git", "push", "origin", "master"],
+            cwd=PROJECT
+        )
+        # Only mark this content as synced once it's actually confirmed
+        # on the remote. Writing this unconditionally (the old bug) meant
+        # a failed push - or a concurrent deploy's `git reset --hard`
+        # wiping the staged/committed content mid-flight - would still
+        # get recorded as "synced", and that log content would never be
+        # retried or committed again.
+        if push.returncode == 0:
+            HASH_FILE.write_text(current_hash)
+    # If commit.returncode != 0, nothing was actually staged (most likely
+    # a concurrent deploy's reset --hard cleared the index before this
+    # commit ran). Leave HASH_FILE untouched so the next run re-evaluates
+    # against the real old_hash instead of silently giving up on it.
+finally:
+    fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    lock_fd.close()

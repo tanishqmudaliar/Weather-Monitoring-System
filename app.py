@@ -6,6 +6,7 @@ import html
 import threading
 import requests
 import time
+import fcntl
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from dotenv import load_dotenv
@@ -24,6 +25,11 @@ PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
 DEPLOYMENT_LOG = f"{PROJECT_PATH}/.github/logs/deployment.log"
 RUNTIME_LOG = f"{PROJECT_PATH}/.github/logs/runtime.log"
 DEPLOY_FLAG = f"{PROJECT_PATH}/.deployment_pending"
+# Shared with sync_logs.py so its git add/commit/push can never
+# interleave with this process's git fetch/reset on the same working
+# tree - without this, a reset --hard landing mid-commit can wipe a
+# staged/committed log update before it's pushed.
+GIT_LOCK = f"{PROJECT_PATH}/.git/deploy.lock"
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 
 
@@ -138,17 +144,39 @@ def github_webhook():
         # Pull latest code from GitHub
         log_deployment("🔄 Pulling latest code from GitHub...")
 
-        subprocess.run(
-            ['git', 'fetch', 'origin'],
-            cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
-        )
+        # deployment.log is git-tracked, and `git reset --hard` discards
+        # any uncommitted local changes to tracked files - including the
+        # three lines just logged above - reverting the file back to
+        # whatever origin/master last had. Snapshot it now and restore it
+        # right after the reset so those entries survive.
+        log_backup = None
+        if os.path.exists(DEPLOYMENT_LOG):
+            with open(DEPLOYMENT_LOG, 'r') as f:
+                log_backup = f.read()
 
-        # Hard reset instead of a plain pull so a dirty working tree
-        # (e.g. leftover log commits) can never cause a merge conflict
-        pull_result = subprocess.run(
-            ['git', 'reset', '--hard', 'origin/master'],
-            cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
-        )
+        with open(GIT_LOCK, 'w') as lockf:
+            # Hold this for the whole fetch+reset so sync_logs.py's cron
+            # can never commit/push - or get its staged index wiped mid-
+            # commit - while this reset is running.
+            fcntl.flock(lockf, fcntl.LOCK_EX)
+            try:
+                subprocess.run(
+                    ['git', 'fetch', 'origin'],
+                    cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
+                )
+
+                # Hard reset instead of a plain pull so a dirty working tree
+                # (e.g. leftover log commits) can never cause a merge conflict
+                pull_result = subprocess.run(
+                    ['git', 'reset', '--hard', 'origin/master'],
+                    cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
+                )
+
+                if log_backup is not None:
+                    with open(DEPLOYMENT_LOG, 'w') as f:
+                        f.write(log_backup)
+            finally:
+                fcntl.flock(lockf, fcntl.LOCK_UN)
 
         if pull_result.returncode == 0:
             log_deployment(f"✓ Git pull successful")
