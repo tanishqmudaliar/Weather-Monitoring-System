@@ -102,7 +102,10 @@ log_deployment("=" * 60, log_file=RUNTIME_LOG)
 # crash recovery, or manual reload won't have this flag, so those
 # stay confined to runtime.log as before.
 if os.path.exists(DEPLOY_FLAG):
-    log_deployment("✓ Server restarted successfully")
+    log_deployment("=" * 60)
+    log_deployment("SERVER STARTED SUCCESSFULLY")
+    log_deployment(f"Flask app initialized at {datetime.now().isoformat()}")
+    log_deployment("=" * 60)
     os.remove(DEPLOY_FLAG)
 
 
@@ -154,8 +157,7 @@ def github_webhook():
             # regardless of timing.
             fcntl.flock(lockf, fcntl.LOCK_EX)
             try:
-                # Captured before fetch/reset move anything - this is the
-                # "old" side of the diffstat below.
+                # Capture current HEAD before updating so we can diff against it after
                 old_head = subprocess.run(
                     ['git', 'rev-parse', 'HEAD'],
                     cwd=PROJECT_PATH, capture_output=True, text=True, timeout=10
@@ -166,19 +168,6 @@ def github_webhook():
                     cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
                 )
 
-                # File-level diffstat, the same info a fast-forward `git
-                # pull` used to print for free. Must run before reset
-                # --hard, since old_head is only guaranteed resolvable
-                # as "old" up until that point.
-                diffstat = subprocess.run(
-                    ['git', 'diff', '--stat', old_head, 'origin/master'],
-                    cwd=PROJECT_PATH, capture_output=True, text=True, timeout=30
-                ).stdout.strip()
-
-                # Hard reset instead of a plain pull so a dirty working tree
-                # can never cause a merge conflict. Safe to do unconditionally
-                # now: deployment.log is gitignored/untracked, so this can
-                # never wipe log entries no matter when it runs.
                 pull_result = subprocess.run(
                     ['git', 'reset', '--hard', 'origin/master'],
                     cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
@@ -186,14 +175,20 @@ def github_webhook():
             finally:
                 fcntl.flock(lockf, fcntl.LOCK_UN)
 
-        if pull_result.returncode == 0:
-            log_deployment(f"✓ Git pull successful")
-            for line in diffstat.splitlines():
-                log_deployment(f"   {line}")
-            log_deployment(f"   {pull_result.stdout.strip()}")
-        else:
-            log_deployment(f"✗ Git pull failed: {pull_result.stderr}")
-            return jsonify({'error': 'Git pull failed', 'details': pull_result.stderr}), 500
+            if pull_result.returncode == 0:
+                log_deployment(f"✓ Git pull successful")
+                log_deployment(f"   {pull_result.stdout.strip()}")
+
+                # reset --hard doesn't print what changed, so diff it manually
+                diffstat = subprocess.run(
+                    ['git', 'diff', '--stat', old_head, 'HEAD'],
+                    cwd=PROJECT_PATH, capture_output=True, text=True, timeout=10
+                )
+                if diffstat.stdout.strip():
+                    log_deployment(diffstat.stdout.strip())
+            else:
+                log_deployment(f"✗ Git pull failed: {pull_result.stderr}")
+                return jsonify({'error': 'Git pull failed', 'details': pull_result.stderr}), 500
 
     except Exception as e:
         log_deployment(f"✗ Git pull error: {str(e)}")
