@@ -154,10 +154,26 @@ def github_webhook():
             # regardless of timing.
             fcntl.flock(lockf, fcntl.LOCK_EX)
             try:
+                # Captured before fetch/reset move anything - this is the
+                # "old" side of the diffstat below.
+                old_head = subprocess.run(
+                    ['git', 'rev-parse', 'HEAD'],
+                    cwd=PROJECT_PATH, capture_output=True, text=True, timeout=10
+                ).stdout.strip()
+
                 subprocess.run(
                     ['git', 'fetch', 'origin'],
                     cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
                 )
+
+                # File-level diffstat, the same info a fast-forward `git
+                # pull` used to print for free. Must run before reset
+                # --hard, since old_head is only guaranteed resolvable
+                # as "old" up until that point.
+                diffstat = subprocess.run(
+                    ['git', 'diff', '--stat', old_head, 'origin/master'],
+                    cwd=PROJECT_PATH, capture_output=True, text=True, timeout=30
+                ).stdout.strip()
 
                 # Hard reset instead of a plain pull so a dirty working tree
                 # can never cause a merge conflict. Safe to do unconditionally
@@ -172,6 +188,8 @@ def github_webhook():
 
         if pull_result.returncode == 0:
             log_deployment(f"✓ Git pull successful")
+            for line in diffstat.splitlines():
+                log_deployment(f"   {line}")
             log_deployment(f"   {pull_result.stdout.strip()}")
         else:
             log_deployment(f"✗ Git pull failed: {pull_result.stderr}")
