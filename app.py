@@ -188,10 +188,6 @@ def github_webhook():
                     cwd=PROJECT_PATH, capture_output=True, text=True, timeout=10
                 )
                 if diffstat.stdout.strip():
-                    # Single log_deployment call → one timestamp on "Updating...",
-                    # everything else rides along as bare lines. Fast-forward is
-                    # cosmetic (reset --hard doesn't guarantee it) but kept for the
-                    # familiar git-pull look.
                     log_deployment(
                         f"   Updating {old_head[:7]}..{new_head[:7]}\n"
                         f"Fast-forward\n"
