@@ -22,13 +22,16 @@ WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
 PYTHONANYWHERE_API_TOKEN = os.getenv("PYTHONANYWHERE_API_TOKEN")
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 PROJECT_PATH = f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System"
+# Untracked (see .gitignore) - this file is written to continuously by
+# the running app, so it must never be a file `git reset --hard` can
+# touch. sync_logs.py periodically snapshots it into a *tracked*
+# archive file instead of committing this one directly.
 DEPLOYMENT_LOG = f"{PROJECT_PATH}/.github/logs/deployment.log"
 RUNTIME_LOG = f"{PROJECT_PATH}/.github/logs/runtime.log"
 DEPLOY_FLAG = f"{PROJECT_PATH}/.deployment_pending"
-# Shared with sync_logs.py so its git add/commit/push can never
-# interleave with this process's git fetch/reset on the same working
-# tree - without this, a reset --hard landing mid-commit can wipe a
-# staged/committed log update before it's pushed.
+# Shared with sync_logs.py purely to avoid two git processes racing
+# for the index lock at the same instant; not load-bearing for
+# correctness anymore now that deployment.log is untracked.
 GIT_LOCK = f"{PROJECT_PATH}/.git/deploy.lock"
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 
@@ -144,20 +147,11 @@ def github_webhook():
         # Pull latest code from GitHub
         log_deployment("🔄 Pulling latest code from GitHub...")
 
-        # deployment.log is git-tracked, and `git reset --hard` discards
-        # any uncommitted local changes to tracked files - including the
-        # three lines just logged above - reverting the file back to
-        # whatever origin/master last had. Snapshot it now and restore it
-        # right after the reset so those entries survive.
-        log_backup = None
-        if os.path.exists(DEPLOYMENT_LOG):
-            with open(DEPLOYMENT_LOG, 'r') as f:
-                log_backup = f.read()
-
         with open(GIT_LOCK, 'w') as lockf:
-            # Hold this for the whole fetch+reset so sync_logs.py's cron
-            # can never commit/push - or get its staged index wiped mid-
-            # commit - while this reset is running.
+            # Purely to avoid two git processes hitting the index lock
+            # at the same instant as sync_logs.py's cron; deployment.log
+            # itself is untracked now, so reset --hard can't touch it
+            # regardless of timing.
             fcntl.flock(lockf, fcntl.LOCK_EX)
             try:
                 subprocess.run(
@@ -166,15 +160,13 @@ def github_webhook():
                 )
 
                 # Hard reset instead of a plain pull so a dirty working tree
-                # (e.g. leftover log commits) can never cause a merge conflict
+                # can never cause a merge conflict. Safe to do unconditionally
+                # now: deployment.log is gitignored/untracked, so this can
+                # never wipe log entries no matter when it runs.
                 pull_result = subprocess.run(
                     ['git', 'reset', '--hard', 'origin/master'],
                     cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
                 )
-
-                if log_backup is not None:
-                    with open(DEPLOYMENT_LOG, 'w') as f:
-                        f.write(log_backup)
             finally:
                 fcntl.flock(lockf, fcntl.LOCK_UN)
 

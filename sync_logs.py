@@ -12,11 +12,18 @@ load_dotenv()
 PYTHONANYWHERE_USERNAME = os.getenv("PYTHONANYWHERE_USERNAME")
 
 PROJECT = Path(f"/home/{PYTHONANYWHERE_USERNAME}/Weather-Monitoring-System")
+# Live log the running app writes to continuously. Deliberately
+# untracked (see .gitignore) so `git reset --hard` in the webhook
+# handler can never touch it, no matter when this script runs
+# relative to a deploy.
 LOG = PROJECT / ".github/logs/deployment.log"
+# Git-tracked snapshot this script owns exclusively - the app never
+# writes to this path, so there's nothing for a deploy's reset to race
+# against here either.
+ARCHIVE = PROJECT / ".github/logs/deployment-history.log"
 HASH_FILE = PROJECT / ".github/logs/.deployment.hash"
-# Same lock file app.py holds around its git fetch/reset, so this
-# script's add/commit/push can never interleave with a deploy's git
-# operations on the same working tree.
+# Purely to avoid two git processes (this script and the webhook's
+# fetch/reset) hitting the .git index lock at the same instant.
 LOCK_FILE = PROJECT / ".git/deploy.lock"
 
 # No deployment.log yet means the app hasn't logged anything on this
@@ -32,7 +39,8 @@ try:
     # Hash the content rather than checking mtime/size: PythonAnywhere can
     # touch the file (reload, filesystem sync) without the content actually
     # changing, and mtime alone would trigger pointless commits.
-    current_hash = hashlib.sha256(LOG.read_bytes()).hexdigest()
+    log_bytes = LOG.read_bytes()
+    current_hash = hashlib.sha256(log_bytes).hexdigest()
 
     # No hash file yet = first run on this machine. old_hash stays "",
     # which never matches a real sha256 digest, so the first run always
@@ -46,18 +54,24 @@ try:
     if current_hash == old_hash:
         raise SystemExit(0)
 
+    # Snapshot the live log's current content into the tracked archive
+    # file. This is the only place ARCHIVE is ever written, so there's
+    # no concurrent writer to race against.
+    ARCHIVE.write_bytes(log_bytes)
+
     # check=True here on purpose: staging should never fail under normal
     # conditions, so treat it as fatal if it does rather than silently
-    # continuing with a dirty/unstaged log file.
+    # continuing with a dirty/unstaged archive file.
     subprocess.run(
-        ["git", "add", ".github/logs/deployment.log"],
+        ["git", "add", str(ARCHIVE.relative_to(PROJECT))],
         cwd=PROJECT,
         check=True
     )
 
     # No check=True: git commit exits non-zero when there's nothing staged
-    # to commit. That's used as a signal below (skip the push) rather than
-    # treated as a failure that should crash the script.
+    # to commit (e.g. the archive already matched this content). That's
+    # used as a signal below (skip the push) rather than treated as a
+    # failure that should crash the script.
     commit = subprocess.run(
         [
             "git",
@@ -76,17 +90,10 @@ try:
             cwd=PROJECT
         )
         # Only mark this content as synced once it's actually confirmed
-        # on the remote. Writing this unconditionally (the old bug) meant
-        # a failed push - or a concurrent deploy's `git reset --hard`
-        # wiping the staged/committed content mid-flight - would still
-        # get recorded as "synced", and that log content would never be
-        # retried or committed again.
+        # on the remote - a failed push shouldn't be recorded as done,
+        # or that log content would never be retried.
         if push.returncode == 0:
             HASH_FILE.write_text(current_hash)
-    # If commit.returncode != 0, nothing was actually staged (most likely
-    # a concurrent deploy's reset --hard cleared the index before this
-    # commit ran). Leave HASH_FILE untouched so the next run re-evaluates
-    # against the real old_hash instead of silently giving up on it.
 finally:
     fcntl.flock(lock_fd, fcntl.LOCK_UN)
     lock_fd.close()
