@@ -356,55 +356,102 @@ Fast-forward
 [2026-07-22T14:59:40.553238] SERVER STARTED SUCCESSFULLY
 [2026-07-22T14:59:40.557225] Flask app initialized at 2026-07-22T14:59:40.556697
 [2026-07-22T14:59:40.560995] ============================================================
+[2026-07-22T15:19:07.176633] 📦 Webhook received: refs/heads/master - 773bbbe
+[2026-07-22T15:19:07.181633]    Commit message: feat: Add deployment flag handling and update log paths
+[2026-07-22T15:19:07.186633] 🔄 Pulling latest code from GitHub...
 [2026-07-22T15:19:08.086633] ✓ Git pull successful
+[2026-07-22T15:19:08.088633]    Updating ba10d5a..773bbbe
+Fast-forward
+ .github/logs/deployment.log | 33 ++++++++++++++++++++++++++++++++-
+ .gitignore                  |  4 +++-
+ app.py                      | 13 +++++++++++++
+ 3 files changed, 48 insertions(+), 2 deletions(-)
 [2026-07-22T15:19:08.090662]    HEAD is now at 773bbbe feat: Add deployment flag handling and update log paths
 [2026-07-22T15:19:08.095108] 📦 Installing dependencies...
 [2026-07-22T15:19:10.050535] ✓ Dependencies installed
 [2026-07-22T15:19:10.055551] ✓ Deployment complete, server reload scheduled
 [2026-07-22T15:19:12.061672] Starting webapp reload...
+[2026-07-27T18:30:43.916107] 📦 Webhook received: refs/heads/master - ecb0604
+[2026-07-27T18:30:43.921107]    Commit message: feat: Implement file locking for git operations to prevent interleaving during deployments
+[2026-07-27T18:30:43.926107] 🔄 Pulling latest code from GitHub...
 [2026-07-27T18:30:44.826107] ✓ Git pull successful
+[2026-07-27T18:30:44.828107]    Updating 773bbbe..ecb0604
+Fast-forward
+ .github/logs/deployment.log |   8 +++-
+ app.py                      |  48 +++++++++++++++-----
+ sync_logs.py                | 106 +++++++++++++++++++++++++-------------------
+ 3 files changed, 106 insertions(+), 56 deletions(-)
 [2026-07-27T18:30:44.831601]    HEAD is now at ecb0604 feat: Implement file locking for git operations to prevent interleaving during deployments
 [2026-07-27T18:30:44.844777] 📦 Installing dependencies...
 [2026-07-27T18:30:50.586757] ✓ Dependencies installed
 [2026-07-27T18:30:50.596885] ✓ Deployment complete, server reload scheduled
 [2026-07-27T18:30:52.597808] Starting webapp reload...
-[2026-07-27T18:31:01.462688] ✓ Server restarted successfully
+[2026-07-27T18:31:01.462688] ============================================================
+[2026-07-27T18:31:01.466618] SERVER STARTED SUCCESSFULLY
+[2026-07-27T18:31:01.472405] Flask app initialized at 2026-07-27T18:31:01.471500
+[2026-07-27T18:31:01.476237] ============================================================
 [2026-07-27T18:38:28.704460] 📦 Webhook received: refs/heads/master - d49c82a
 [2026-07-27T18:38:28.709602]    Commit message: chore: stop tracking live deployment log
 [2026-07-27T18:38:28.714107] 🔄 Pulling latest code from GitHub...
 [2026-07-27T18:38:29.215537] ✓ Git pull successful
+[2026-07-27T18:38:29.217537]    Updating ecb0604..d49c82a
+Fast-forward
+ .github/logs/deployment.log | 364 --------------------------------------------
+ .gitignore                  |   3 +-
+ 2 files changed, 2 insertions(+), 365 deletions(-)
 [2026-07-27T18:38:29.220859]    HEAD is now at d49c82a chore: stop tracking live deployment log
 [2026-07-27T18:38:29.225297] 📦 Installing dependencies...
 [2026-07-27T18:38:33.940114] ✓ Dependencies installed
 [2026-07-27T18:38:33.948278] ✓ Deployment complete, server reload scheduled
 [2026-07-27T18:38:35.954487] Starting webapp reload...
-[2026-07-27T18:38:44.101180] ✓ Server restarted successfully
+[2026-07-27T18:38:44.101180] ============================================================
+[2026-07-27T18:38:44.105110] SERVER STARTED SUCCESSFULLY
+[2026-07-27T18:38:44.110897] Flask app initialized at 2026-07-27T18:38:44.109992
+[2026-07-27T18:38:44.114729] ============================================================
 [2026-07-27T18:39:42.666420] 📦 Webhook received: refs/heads/master - 6b2af39
 [2026-07-27T18:39:42.674237]    Commit message: Merge branch master of https://github.com/tanishqmudaliar/Weather-Monitoring-System
 [2026-07-27T18:39:42.679500] 🔄 Pulling latest code from GitHub...
 [2026-07-27T18:39:43.802934] ✓ Git pull successful
+[2026-07-27T18:39:43.804934]    Updating d49c82a..6b2af39
+Fast-forward
+ app.py       | 36 ++++++++++++++----------------------
+ sync_logs.py | 41 ++++++++++++++++++++++++-----------------
+ 2 files changed, 38 insertions(+), 39 deletions(-)
 [2026-07-27T18:39:43.806802]    HEAD is now at 6b2af39 Merge branch 'master' of https://github.com/tanishqmudaliar/Weather-Monitoring-System
 [2026-07-27T18:39:43.812121] 📦 Installing dependencies...
 [2026-07-27T18:39:49.618979] ✓ Dependencies installed
 [2026-07-27T18:39:49.630157] ✓ Deployment complete, server reload scheduled
 [2026-07-27T18:39:51.632411] Starting webapp reload...
-[2026-07-27T18:39:57.740343] ✓ Server restarted successfully
+[2026-07-27T18:39:57.740343] ============================================================
+[2026-07-27T18:39:57.744273] SERVER STARTED SUCCESSFULLY
+[2026-07-27T18:39:57.750060] Flask app initialized at 2026-07-27T18:39:57.749155
+[2026-07-27T18:39:57.753892] ============================================================
 [2026-07-27T19:19:25.733647] 📦 Webhook received: refs/heads/master - 7453ca4
 [2026-07-27T19:19:25.739841]    Commit message: feat: Enhance deployment logging with git diffstat output for better visibility
 [2026-07-27T19:19:25.747219] 🔄 Pulling latest code from GitHub...
 [2026-07-27T19:19:26.907315] ✓ Git pull successful
+[2026-07-27T19:19:26.909315]    Updating 6b2af39..7453ca4
+Fast-forward
+ .gitignore |  2 +-
+ app.py     | 18 ++++++++++++++++++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
 [2026-07-27T19:19:26.911339]    HEAD is now at 7453ca4 feat: Enhance deployment logging with git diffstat output for better visibility
 [2026-07-27T19:19:26.916207] 📦 Installing dependencies...
 [2026-07-27T19:19:34.304566] ✓ Dependencies installed
 [2026-07-27T19:19:34.319645] ✓ Deployment complete, server reload scheduled
 [2026-07-27T19:19:36.317110] Starting webapp reload...
-[2026-07-27T19:19:44.675268] ✓ Server restarted successfully
+[2026-07-27T19:19:44.675268] ============================================================
+[2026-07-27T19:19:44.679198] SERVER STARTED SUCCESSFULLY
+[2026-07-27T19:19:44.684985] Flask app initialized at 2026-07-27T19:19:44.684080
+[2026-07-27T19:19:44.688817] ============================================================
 [2026-07-27T19:27:22.917872] 📦 Webhook received: refs/heads/master - a34f8d7
 [2026-07-27T19:27:22.923863]    Commit message: refactor: Improve deployment logging and streamline git pull process
 [2026-07-27T19:27:22.927909] 🔄 Pulling latest code from GitHub...
 [2026-07-27T19:27:23.986906] ✓ Git pull successful
-[2026-07-27T19:27:23.991356]    app.py | 43 +++++++++++++++++++------------------------
-[2026-07-27T19:27:23.995529]     1 file changed, 19 insertions(+), 24 deletions(-)
+[2026-07-27T19:27:23.991356]    Updating 7453ca4..a34f8d7
+Fast-forward
+ app.py | 43 +++++++++++++++++++------------------------
+ 1 file changed, 19 insertions(+), 24 deletions(-)
 [2026-07-27T19:27:23.999442]    HEAD is now at a34f8d7 refactor: Improve deployment logging and streamline git pull process
 [2026-07-27T19:27:24.003762] 📦 Installing dependencies...
 [2026-07-27T19:27:30.236215] ✓ Dependencies installed
@@ -418,9 +465,11 @@ Fast-forward
 [2026-07-27T19:33:43.205898]    Commit message: feat: Enhance git pull logging with detailed diffstat output
 [2026-07-27T19:33:43.211249] 🔄 Pulling latest code from GitHub...
 [2026-07-27T19:33:44.096543] ✓ Git pull successful
-[2026-07-27T19:33:44.101267]    HEAD is now at 38bab74 feat: Enhance git pull logging with detailed diffstat output
-[2026-07-27T19:33:44.134920] app.py | 21 +++++++++++++++++----
+[2026-07-27T19:33:44.101267]    Updating a34f8d7..38bab74
+Fast-forward
+ app.py | 21 +++++++++++++++++----
  1 file changed, 17 insertions(+), 4 deletions(-)
+[2026-07-27T19:33:44.134920]    HEAD is now at 38bab74 feat: Enhance git pull logging with detailed diffstat output
 [2026-07-27T19:33:44.139880] 📦 Installing dependencies...
 [2026-07-27T19:33:51.225524] ✓ Dependencies installed
 [2026-07-27T19:33:51.235831] ✓ Deployment complete, server reload scheduled
@@ -446,3 +495,38 @@ app.py | 4 ----
 [2026-07-27T19:39:34.843705] SERVER STARTED SUCCESSFULLY
 [2026-07-27T19:39:34.847347] Flask app initialized at 2026-07-27T19:39:34.846537
 [2026-07-27T19:39:34.850867] ============================================================
+[2026-07-27T20:09:36.069818] 📦 Webhook received: refs/heads/master - 7e30ea6
+[2026-07-27T20:09:36.077100]    Commit message: feat: Update README and CHANGELOG for version 1.7.0, adding runtime log endpoint and enhancing deployment logging
+[2026-07-27T20:09:36.081264] 🔄 Pulling latest code from GitHub...
+[2026-07-27T20:09:37.278648] ✓ Git pull successful
+[2026-07-27T20:09:37.331049]    Updating c6506d0..7e30ea6
+Fast-forward
+CHANGELOG.md | 24 ++++++++++++++++++++++++
+ README.md    | 11 ++++++-----
+ 2 files changed, 30 insertions(+), 5 deletions(-)
+[2026-07-27T20:09:37.335276]    HEAD is now at 7e30ea6 feat: Update README and CHANGELOG for version 1.7.0, adding runtime log endpoint and enhancing deployment logging
+[2026-07-27T20:09:37.340805] 📦 Installing dependencies...
+[2026-07-27T20:09:43.779757] ✓ Dependencies installed
+[2026-07-27T20:09:43.788129] ✓ Deployment complete, server reload scheduled
+[2026-07-27T20:09:45.789758] Starting webapp reload...
+[2026-07-27T20:09:53.464069] ============================================================
+[2026-07-27T20:09:53.467960] SERVER STARTED SUCCESSFULLY
+[2026-07-27T20:09:53.471580] Flask app initialized at 2026-07-27T20:09:53.470932
+[2026-07-27T20:09:53.478767] ============================================================
+[2026-07-27T20:13:36.863363] 📦 Webhook received: refs/heads/master - b81a969
+[2026-07-27T20:13:36.877998]    Commit message: fix: Update changelog links for version 1.7.0
+[2026-07-27T20:13:36.883613] 🔄 Pulling latest code from GitHub...
+[2026-07-27T20:13:38.191814] ✓ Git pull successful
+[2026-07-27T20:13:38.247609]    Updating 7e30ea6..b81a969
+Fast-forward
+CHANGELOG.md | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+[2026-07-27T20:13:38.257802]    HEAD is now at b81a969 fix: Update changelog links for version 1.7.0
+[2026-07-27T20:13:38.262085] 📦 Installing dependencies...
+[2026-07-27T20:13:46.024488] ✓ Dependencies installed
+[2026-07-27T20:13:46.031582] ✓ Deployment complete, server reload scheduled
+[2026-07-27T20:13:48.035364] Starting webapp reload...
+[2026-07-27T20:13:54.537119] ============================================================
+[2026-07-27T20:13:54.541461] SERVER STARTED SUCCESSFULLY
+[2026-07-27T20:13:54.546755] Flask app initialized at 2026-07-27T20:13:54.544686
+[2026-07-27T20:13:54.550862] ============================================================
