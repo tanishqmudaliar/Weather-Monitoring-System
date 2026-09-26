@@ -530,3 +530,60 @@ CHANGELOG.md | 3 ++-
 [2026-07-27T20:13:54.541461] SERVER STARTED SUCCESSFULLY
 [2026-07-27T20:13:54.546755] Flask app initialized at 2026-07-27T20:13:54.544686
 [2026-07-27T20:13:54.550862] ============================================================
+[2026-09-26T17:56:51.959208] 📦 Webhook received: refs/heads/master - 5d9194d
+[2026-09-26T17:56:51.963719]    Commit message: Merge PR #1: bump Flask to 3.1.3
+
+Merge dependency upgrade.
+[2026-09-26T17:56:51.968506] 🔄 Pulling latest code from GitHub...
+[2026-09-26T17:56:53.243538] ✓ Git pull successful
+[2026-09-26T17:56:53.267568]    Updating 94a326f..5d9194d
+Fast-forward
+requirements.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+[2026-09-26T17:56:53.271394]    HEAD is now at 5d9194d Merge PR #1: bump Flask to 3.1.3
+[2026-09-26T17:56:53.275318] 📦 Installing dependencies...
+[2026-09-26T17:56:59.509422] ✓ Dependencies installed
+[2026-09-26T17:56:59.518888] ✓ Deployment complete, server reload scheduled
+[2026-09-26T17:57:01.521084] Starting webapp reload...
+[2026-09-26T17:57:09.597126] ============================================================
+[2026-09-26T17:57:09.601120] SERVER STARTED SUCCESSFULLY
+[2026-09-26T17:57:09.605268] Flask app initialized at 2026-09-26T17:57:09.604617
+[2026-09-26T17:57:09.609655] ============================================================
+[2026-09-26T17:58:43.584330] 📦 Webhook received: refs/heads/master - 2d5e78f
+[2026-09-26T17:58:43.587507]    Commit message: Merge PR #2: bump Requests to 2.33.0
+
+Merge dependency upgrade.
+[2026-09-26T17:58:43.592517] 🔄 Pulling latest code from GitHub...
+[2026-09-26T17:58:44.582315] ✓ Git pull successful
+[2026-09-26T17:58:44.603496]    Updating 5d9194d..2d5e78f
+Fast-forward
+requirements.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+[2026-09-26T17:58:44.608275]    HEAD is now at 2d5e78f Merge PR #2: bump Requests to 2.33.0
+[2026-09-26T17:58:44.612311] 📦 Installing dependencies...
+[2026-09-26T17:58:47.634119] ✓ Dependencies installed
+[2026-09-26T17:58:47.643105] ✓ Deployment complete, server reload scheduled
+[2026-09-26T17:58:49.643663] Starting webapp reload...
+[2026-09-26T17:58:53.893882] ============================================================
+[2026-09-26T17:58:53.898907] SERVER STARTED SUCCESSFULLY
+[2026-09-26T17:58:53.902641] Flask app initialized at 2026-09-26T17:58:53.902003
+[2026-09-26T17:58:53.906568] ============================================================
+[2026-09-26T17:59:27.084512] 📦 Webhook received: refs/heads/master - 7e57dce
+[2026-09-26T17:59:27.087660]    Commit message: Merge PR #3: bump python-dotenv to 1.2.2
+
+Merge dependency upgrade.
+[2026-09-26T17:59:27.091571] 🔄 Pulling latest code from GitHub...
+[2026-09-26T17:59:27.842221] ✓ Git pull successful
+[2026-09-26T17:59:27.863736]    Updating 2d5e78f..7e57dce
+Fast-forward
+requirements.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+[2026-09-26T17:59:27.867947]    HEAD is now at 7e57dce Merge PR #3: bump python-dotenv to 1.2.2
+[2026-09-26T17:59:27.872513] 📦 Installing dependencies...
+[2026-09-26T17:59:30.544346] ✓ Dependencies installed
+[2026-09-26T17:59:30.553041] ✓ Deployment complete, server reload scheduled
+[2026-09-26T17:59:32.554730] Starting webapp reload...
+[2026-09-26T17:59:36.698518] ============================================================
+[2026-09-26T17:59:36.702158] SERVER STARTED SUCCESSFULLY
+[2026-09-26T17:59:36.706065] Flask app initialized at 2026-09-26T17:59:36.705422
+[2026-09-26T17:59:36.709882] ============================================================
