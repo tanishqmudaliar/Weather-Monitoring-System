@@ -201,7 +201,7 @@ def github_webhook():
 
     except Exception as e:
         log_deployment(f"✗ Git pull error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': 'Deployment update failed'}), 500
 
     try:
         # Install dependencies
@@ -253,7 +253,8 @@ def view_deployment_log():
     except FileNotFoundError:
         return "No deployment log found", 404
     except Exception as e:
-        return f"Error: {e}", 500
+        app.logger.exception("Deployment log read failed")
+        return "Unable to read deployment log", 500
 
 
 @app.route('/runtime-log')
@@ -277,7 +278,8 @@ def view_runtime_log():
     except FileNotFoundError:
         return "No runtime log found", 404
     except Exception as e:
-        return f"Error: {e}", 500
+        app.logger.exception("Runtime log read failed")
+        return "Unable to read runtime log", 500
 
 
 @app.route('/')
@@ -374,7 +376,8 @@ def get_current_weather():
     except requests.RequestException:
         return jsonify({"error": "Service unavailable"}), 502
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.exception("Weather request failed")
+        return jsonify({"error": "Unable to retrieve weather data"}), 500
 
 
 @app.route('/api/forecast')
@@ -429,7 +432,8 @@ def get_forecast():
     except requests.RequestException:
         return jsonify({"error": "Service unavailable"}), 502
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.exception("Forecast request failed")
+        return jsonify({"error": "Unable to retrieve forecast data"}), 500
 
 
 @app.route('/api/air-quality')
@@ -485,7 +489,8 @@ def get_air_quality():
     except requests.RequestException:
         return jsonify({"error": "Service unavailable"}), 502
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.exception("Air quality request failed")
+        return jsonify({"error": "Unable to retrieve air quality data"}), 500
 
 
 def calculate_us_aqi_from_pm25(pm25):
@@ -527,4 +532,4 @@ def get_uv_index_from_open_meteo(lat, lon):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000)
