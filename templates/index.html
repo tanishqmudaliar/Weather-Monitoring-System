@@ -8,14 +8,14 @@
         content="WeatherPro Intelligence - Premium Weather Monitoring & Forecasting Platform with real-time data, air quality insights, and accurate forecasts">
     <meta name="keywords" content="weather, forecast, air quality, temperature, humidity, wind speed">
     <meta name="author" content="Tanishq Mudaliar, Saivel Konar, Hrshita Balakrishnan, Pranali Raut">
-    <meta name="theme-color" content="#090b0e">
+    <meta name="theme-color" content="#050607">
     <title>WeatherPro Intelligence | Premium Weather Platform</title>
 
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
@@ -25,41 +25,33 @@
 </head>
 
 <body>
-    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="grid-overlay"></div>
 
-    <!-- Top bar -->
-    <header class="topbar">
-        <div class="topbar-inner">
+    <div class="container">
+        <!-- Header -->
+        <header>
             <div class="brand">
                 <img class="brand-logo" src="{{ url_for('static', filename='favicon.ico') }}" alt="WeatherPro Logo" />
                 <div class="brand-text">
-                    <h1>WeatherPro <span>Intelligence</span></h1>
-                    <p>Weather monitoring &amp; forecasting</p>
+                    <h1>WeatherPro Intelligence</h1>
+                    <p>Premium Weather Monitoring & Forecasting</p>
                 </div>
             </div>
             <div class="header-actions">
-                <span class="header-status"><span class="status-dot"></span>Systems online</span>
-                <div class="unit-toggle" role="group" aria-label="Temperature unit">
+                <div class="unit-toggle">
                     <button id="metric-toggle" class="active">°C</button>
                     <button id="imperial-toggle">°F</button>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <main class="container">
-        <!-- Search -->
-        <section class="search-section">
-            <div class="search-heading">
-                <span class="eyebrow">Live conditions · Worldwide</span>
-                <h2>Where are you checking today?</h2>
-            </div>
+        <!-- Search Section -->
+        <div class="search-section">
             <div class="search-wrapper">
                 <div class="search-input-group">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="location-input" placeholder="Search any city — e.g. Pune, Berlin, Sydney"
-                        autocomplete="off" aria-label="City name">
-                    <kbd class="search-kbd">Enter</kbd>
+                    <input type="text" id="location-input" placeholder="Search for any city worldwide..."
+                        autocomplete="off">
                 </div>
                 <button id="geolocation-btn" class="btn btn-secondary" title="Use my location"
                     aria-label="Use my location">
@@ -70,40 +62,38 @@
                     <span>Search</span>
                 </button>
             </div>
+        </div>
 
-            <!-- Quick Cities -->
-            <div class="quick-cities">
-                <span class="quick-label">Quick picks</span>
-                <div class="city-chip" data-city="Mumbai"><i class="fas fa-location-dot"></i> Mumbai</div>
-                <div class="city-chip" data-city="Delhi"><i class="fas fa-location-dot"></i> Delhi</div>
-                <div class="city-chip" data-city="Bengaluru"><i class="fas fa-location-dot"></i> Bengaluru</div>
-                <div class="city-chip" data-city="Chennai"><i class="fas fa-location-dot"></i> Chennai</div>
-                <div class="city-chip" data-city="Kolkata"><i class="fas fa-location-dot"></i> Kolkata</div>
-                <div class="city-chip" data-city="Miami"><i class="fas fa-location-dot"></i> Miami</div>
-                <div class="city-chip" data-city="London"><i class="fas fa-location-dot"></i> London</div>
-                <div class="city-chip" data-city="New York"><i class="fas fa-location-dot"></i> New York</div>
-                <div class="city-chip" data-city="Tokyo"><i class="fas fa-location-dot"></i> Tokyo</div>
-                <div class="city-chip" data-city="Paris"><i class="fas fa-location-dot"></i> Paris</div>
-                <div class="city-chip" data-city="Singapore"><i class="fas fa-location-dot"></i> Singapore</div>
-            </div>
-        </section>
+        <!-- Quick Cities -->
+        <div class="quick-cities">
+            <div class="city-chip" data-city="Mumbai"><i class="fas fa-location-dot"></i> Mumbai</div>
+            <div class="city-chip" data-city="Delhi"><i class="fas fa-location-dot"></i> Delhi</div>
+            <div class="city-chip" data-city="Bengaluru"><i class="fas fa-location-dot"></i> Bengaluru</div>
+            <div class="city-chip" data-city="Chennai"><i class="fas fa-location-dot"></i> Chennai</div>
+            <div class="city-chip" data-city="Kolkata"><i class="fas fa-location-dot"></i> Kolkata</div>
+            <div class="city-chip" data-city="Miami"><i class="fas fa-location-dot"></i> Miami</div>
+            <div class="city-chip" data-city="London"><i class="fas fa-location-dot"></i> London</div>
+            <div class="city-chip" data-city="New York"><i class="fas fa-location-dot"></i> New York</div>
+            <div class="city-chip" data-city="Tokyo"><i class="fas fa-location-dot"></i> Tokyo</div>
+            <div class="city-chip" data-city="Paris"><i class="fas fa-location-dot"></i> Paris</div>
+            <div class="city-chip" data-city="Singapore"><i class="fas fa-location-dot"></i> Singapore</div>
+        </div>
 
         <div id="empty-state" class="empty-state">
-            <div class="empty-icon"><i class="fas fa-cloud-sun"></i></div>
-            <h3>No location selected</h3>
+            <i class="fas fa-cloud-sun"></i>
             <p>Search for a city or use your location to view weather data</p>
         </div>
 
         <!-- Loading State -->
-        <div id="loader" class="loader hidden" role="status">
+        <div id="loader" class="loader hidden">
             <div class="spinner"></div>
             <div class="loader-text">Fetching weather intelligence...</div>
         </div>
 
         <!-- Error State -->
-        <div id="error-section" class="error-section hidden" role="alert">
+        <div id="error-section" class="error-section hidden">
             <div class="error-icon">
-                <i class="fas fa-triangle-exclamation"></i>
+                <i class="fas fa-cloud-exclamation"></i>
             </div>
             <h3>Unable to Retrieve Weather Data</h3>
             <p>Please check the city name and try again, or use the geolocation button.</p>
@@ -116,7 +106,7 @@
 
             <div class="dashboard-grid">
                 <!-- Current Weather Card -->
-                <section class="card card-main">
+                <div class="card card-main">
                     <div class="card-header">
                         <div class="card-title">
                             <i class="fas fa-cloud-sun"></i>
@@ -204,12 +194,12 @@
                             <div class="stat-value" id="uv-index">--</div>
                         </div>
                     </div>
-                </section>
+                </div>
 
                 <!-- Side Cards -->
                 <div class="side-cards">
                     <!-- Air Quality Card -->
-                    <section class="card card-side">
+                    <div class="card card-side">
                         <div class="card-header">
                             <div class="card-title">
                                 <i class="fas fa-lungs"></i>
@@ -227,33 +217,55 @@
                             </div>
                         </div>
                         <div class="aqi-details">
-                            <div class="aqi-detail"><span>PM2.5</span><strong id="pm25">--</strong></div>
-                            <div class="aqi-detail"><span>PM10</span><strong id="pm10">--</strong></div>
-                            <div class="aqi-detail"><span>O₃</span><strong id="o3">--</strong></div>
-                            <div class="aqi-detail"><span>NO₂</span><strong id="no2">--</strong></div>
-                            <div class="aqi-detail"><span>NO</span><strong id="no">--</strong></div>
-                            <div class="aqi-detail"><span>NH₃</span><strong id="nh3">--</strong></div>
+                            <div class="aqi-detail">
+                                <span>PM2.5</span>
+                                <strong id="pm25">--</strong>
+                            </div>
+                            <div class="aqi-detail">
+                                <span>PM10</span>
+                                <strong id="pm10">--</strong>
+                            </div>
+                            <div class="aqi-detail">
+                                <span>O₃</span>
+                                <strong id="o3">--</strong>
+                            </div>
+                            <div class="aqi-detail">
+                                <span>NO₂</span>
+                                <strong id="no2">--</strong>
+                            </div>
+                            <div class="aqi-detail">
+                                <span>NO</span>
+                                <strong id="no">--</strong>
+                            </div>
+                            <div class="aqi-detail">
+                                <span>NH₃</span>
+                                <strong id="nh3">--</strong>
+                            </div>
                         </div>
-                    </section>
+                    </div>
 
                     <!-- Sun & Moon Card -->
-                    <section class="card card-side">
+                    <div class="card card-side">
                         <div class="card-header">
                             <div class="card-title">
                                 <i class="fas fa-sun"></i>
-                                Sun &amp; Moon
+                                Sun & Moon
                             </div>
                         </div>
                         <div class="sun-moon-info">
                             <div class="sun-moon-item">
-                                <div class="sun-moon-icon sunrise"><i class="fas fa-arrow-up"></i></div>
+                                <div class="sun-moon-icon sunrise">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
                                 <div class="sun-moon-details">
                                     <span class="label">Sunrise</span>
                                     <strong id="sunrise">--:--</strong>
                                 </div>
                             </div>
                             <div class="sun-moon-item">
-                                <div class="sun-moon-icon sunset"><i class="fas fa-arrow-down"></i></div>
+                                <div class="sun-moon-icon sunset">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
                                 <div class="sun-moon-details">
                                     <span class="label">Sunset</span>
                                     <strong id="sunset">--:--</strong>
@@ -269,69 +281,67 @@
                                 <span>Daylight Duration: <strong id="daylight-hours">--</strong></span>
                             </div>
                         </div>
-                    </section>
+                    </div>
                 </div>
             </div>
 
             <!-- Hourly Forecast -->
-            <section class="card">
+            <div class="card">
                 <div class="card-header">
                     <div class="card-title">
                         <i class="fas fa-clock"></i>
                         48-Hour Forecast
                     </div>
-                    <span class="card-hint">Scroll <i class="fas fa-arrow-right-long"></i></span>
                 </div>
                 <div class="hourly-scroll" id="hourly-forecast"></div>
-            </section>
+            </div>
 
-            <div class="forecast-grid">
-                <!-- Temperature Chart -->
-                <section class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <i class="fas fa-chart-line"></i>
-                            Temperature Trends
-                        </div>
+            <!-- Temperature Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        Temperature Trends
                     </div>
-                    <div class="chart-wrapper">
-                        <canvas id="temp-chart"></canvas>
-                    </div>
-                </section>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="temp-chart"></canvas>
+                </div>
+            </div>
 
-                <!-- 5-Day Forecast -->
-                <section class="card">
-                    <div class="card-header">
-                        <div class="card-title">
-                            <i class="fas fa-calendar-week"></i>
-                            5-Day Forecast
-                        </div>
+            <!-- 5-Day Forecast -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-calendar-week"></i>
+                        5-Day Forecast
                     </div>
-                    <div class="daily-forecast-grid" id="daily-forecast"></div>
-                </section>
+                </div>
+                <div class="daily-forecast-grid" id="daily-forecast"></div>
             </div>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <div class="footer-logo">
-                <i class="fas fa-cloud-sun-rain"></i>
-                <span>WeatherPro Intelligence</span>
+        <!-- Footer -->
+        <footer>
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-cloud-sun-rain"></i>
+                    <span>WeatherPro Intelligence</span>
+                </div>
+                <p class="footer-info">Enterprise-Grade Weather Monitoring Platform</p>
+                <p class="footer-credits">
+                    Developed by <strong>Tanishq Mudaliar</strong>, <strong>Saivel Konar</strong>,
+                    <strong>Hrshita Balakrishnan</strong> & <strong>Pranali Raut</strong>
+                </p>
+                <p class="footer-api">
+                    <i class="fas fa-bolt"></i>
+                    Powered by <a href="https://openweathermap.org/" target="_blank" rel="noopener">OpenWeatherMap
+                        API</a>
+                    & <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>
+                </p>
             </div>
-            <p class="footer-info">Enterprise-Grade Weather Monitoring Platform</p>
-            <p class="footer-credits">
-                Developed by <strong>Tanishq Mudaliar</strong>, <strong>Saivel Konar</strong>,
-                <strong>Hrshita Balakrishnan</strong> &amp; <strong>Pranali Raut</strong>
-            </p>
-            <p class="footer-api">
-                <i class="fas fa-bolt"></i>
-                Powered by <a href="https://openweathermap.org/" target="_blank" rel="noopener">OpenWeatherMap API</a>
-                &amp; <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>
-            </p>
-        </div>
-    </footer>
+        </footer>
+    </div>
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
