@@ -6,7 +6,10 @@ import html
 import threading
 import requests
 import time
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from dotenv import load_dotenv
@@ -155,7 +158,7 @@ def github_webhook():
             # at the same instant as sync_logs.py's cron; deployment.log
             # itself is untracked now, so reset --hard can't touch it
             # regardless of timing.
-            fcntl.flock(lockf, fcntl.LOCK_EX)
+            if fcntl: fcntl.flock(lockf, fcntl.LOCK_EX)
             try:
                 # Capture current HEAD before updating so we can diff against it after
                 old_head = subprocess.run(
@@ -173,7 +176,7 @@ def github_webhook():
                     cwd=PROJECT_PATH, capture_output=True, text=True, timeout=60
                 )
             finally:
-                fcntl.flock(lockf, fcntl.LOCK_UN)
+                if fcntl: fcntl.flock(lockf, fcntl.LOCK_UN)
 
             if pull_result.returncode == 0:
                 log_deployment(f"✓ Git pull successful")
