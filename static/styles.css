@@ -271,149 +271,44 @@ a:hover { color: var(--text); }
 }
 .btn-secondary:hover { color: var(--sky); border-color: var(--sky); background: var(--sky-soft); }
 
-/* ==========================================================================
-   Quick Picks Section (Instrument Panel Styling)
-   ========================================================================== */
-.quick-picks-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 18px;
-  width: 100%;
-}
-
-/* Badge for "Quick picks" */
-.quick-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--sky);
-  background: linear-gradient(135deg, rgba(124, 199, 255, 0.12), rgba(124, 199, 255, 0.04));
-  border: 1px solid rgba(124, 199, 255, 0.22);
-  border-radius: 999px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  user-select: none;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: border-color var(--t), box-shadow var(--t), background var(--t);
-}
-
-.quick-label i {
-  font-size: 10px;
-  color: var(--amber);
-  filter: drop-shadow(0 0 4px rgba(255, 209, 102, 0.45));
-  animation: pulseBolt 3s ease-in-out infinite;
-}
-
-@keyframes pulseBolt {
-  0%, 100% { opacity: 0.85; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.15); filter: drop-shadow(0 0 6px rgba(255, 209, 102, 0.75)); }
-}
-
-/* Chips container (Laptop / Desktop) */
+/* Quick cities */
 .quick-cities {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  flex: 1;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 14px;
 }
-
-/* Fallback if quick-picks-container is omitted */
-.search-section > .quick-cities {
-  margin-top: 16px;
+.quick-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  margin-right: 6px;
+  flex-shrink: 0;
 }
-.quick-cities > .quick-label {
-  margin-right: 4px;
-}
-
-/* Individual City Chip (Laptop / Desktop Default) */
 .city-chip {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 7px 14px;
-  font-family: var(--font-sans);
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 11px;
   font-size: 13px;
-  font-weight: 500;
   color: var(--text-2);
-  background: var(--surface);
+  background: transparent;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  border-radius: var(--r-sm);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;
-  text-decoration: none;
-  outline: none;
-  position: relative;
-  transition: 
-    color var(--t),
-    border-color var(--t),
-    background var(--t),
-    box-shadow var(--t),
-    transform var(--t);
+  flex: 1 1 auto;
+  transition: color var(--t), border-color var(--t), background var(--t);
 }
-
-.city-chip i {
-  font-size: 10.5px;
-  color: var(--text-3);
-  transition: color var(--t), transform var(--t);
-}
-
-/* Hover state (Laptop) */
-.city-chip:hover {
-  color: var(--text);
-  background: var(--surface-2);
-  border-color: rgba(124, 199, 255, 0.45);
-  box-shadow: 
-    0 4px 14px rgba(0, 0, 0, 0.35),
-    0 0 12px rgba(124, 199, 255, 0.14),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transform: translateY(-2px);
-}
-
-.city-chip:hover i {
-  color: var(--sky);
-  transform: translateY(-1px) scale(1.15);
-}
-
-/* Focus visible state (Accessibility) */
-.city-chip:focus-visible {
-  border-color: var(--sky);
-  box-shadow: var(--focus);
-}
-
-/* Press state */
-.city-chip:active {
-  transform: translateY(0) scale(0.96);
-  background: var(--surface-3);
-  transition-duration: 50ms;
-}
-
-/* Active / Selected city state */
-.city-chip.active {
-  color: #ffffff;
-  background: linear-gradient(135deg, rgba(124, 199, 255, 0.22), rgba(82, 179, 250, 0.12));
-  border-color: var(--sky);
-  box-shadow: 
-    0 0 16px rgba(124, 199, 255, 0.25),
-    0 2px 6px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(124, 199, 255, 0.4);
-  font-weight: 600;
-}
-
-.city-chip.active i {
-  color: var(--sky);
-  filter: drop-shadow(0 0 4px rgba(124, 199, 255, 0.6));
-  transform: scale(1.1);
-}
+.city-chip i { font-size: 10px; color: var(--text-3); transition: color var(--t); }
+.city-chip:hover { color: var(--text); border-color: var(--line-strong); background: var(--surface); }
+.city-chip:hover i { color: var(--sky); }
 
 /* ---------- 6. States ---------- */
 .empty-state,
@@ -855,72 +750,6 @@ footer {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
 
-/* Quick picks tablet & mobile */
-@media (max-width: 768px) {
-  .quick-picks-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    margin-top: 16px;
-    width: 100%;
-    position: relative;
-  }
-
-  .quick-label {
-    padding: 5px 11px;
-    font-size: 10.5px;
-  }
-
-  .quick-cities {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-    gap: 8px;
-    width: calc(100% + 32px);
-    margin-inline: -16px;
-    padding: 4px 28px 8px 16px;
-    scroll-snap-type: x proximity;
-    scroll-padding-left: 16px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent 100%);
-    mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent 100%);
-  }
-
-  .quick-cities::-webkit-scrollbar {
-    display: none;
-  }
-
-  .city-chip {
-    flex-shrink: 0;
-    scroll-snap-align: start;
-    min-height: 38px;
-    padding: 8px 15px;
-    font-size: 13.5px;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .city-chip:active {
-    transform: scale(0.95);
-    background: var(--surface-3);
-  }
-
-  .city-chip.active {
-    box-shadow: 
-      0 0 14px rgba(124, 199, 255, 0.25),
-      inset 0 1px 0 rgba(124, 199, 255, 0.4);
-  }
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .city-chip:hover {
-    transform: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  }
-}
-
 /* ---------- 17. Responsive ---------- */
 @media (max-width: 1100px) {
   .weather-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -948,6 +777,17 @@ footer {
   .footer-content { grid-template-columns: 1fr; }
   .footer-api { grid-column: 1; grid-row: auto; justify-self: start; margin-top: 8px; }
   .card { padding: 16px; }
+  .quick-cities {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    padding-bottom: 4px;
+    margin-inline: -16px;
+    padding-inline: 16px;
+    scrollbar-width: none;
+  }
+  .quick-cities::-webkit-scrollbar { display: none; }
+  .city-chip, .quick-label { flex-shrink: 0; flex-grow: 0; }
 }
 
 @media (max-width: 520px) {
