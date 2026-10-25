@@ -44,6 +44,8 @@ function setupEventListeners() {
     chip.addEventListener("click", () => {
       const city = chip.getAttribute("data-city");
       if (city && locationInput) {
+        cityChips.forEach((c) => c.classList.remove("active"));
+        chip.classList.add("active");
         locationInput.value = city;
         handleSearch();
       }
@@ -242,6 +244,17 @@ function displayCurrentWeather(data) {
     locationName.textContent = parts[0] || data.location;
     if (countryCode && parts[1]) countryCode.textContent = parts[1];
   }
+
+  // Sync active quick pick chip
+  const activeCityName = (data.location || "").split(",")[0].trim().toLowerCase();
+  document.querySelectorAll(".city-chip").forEach((chip) => {
+    const chipCity = (chip.getAttribute("data-city") || "").trim().toLowerCase();
+    if (chipCity && activeCityName && (chipCity === activeCityName || activeCityName.includes(chipCity))) {
+      chip.classList.add("active");
+    } else {
+      chip.classList.remove("active");
+    }
+  });
 
   // Weather Icon
   const weatherIcon = document.getElementById("weather-icon");
