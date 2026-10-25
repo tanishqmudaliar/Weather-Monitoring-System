@@ -3,6 +3,7 @@ let currentUnit = "metric";
 let lastLocation = "";
 let forecastChart = null;
 let currentWeatherData = null;
+let currentForecastData = null;
 let currentTimezoneOffset = 0; // Store city timezone offset
 
 // DOM Elements
@@ -143,9 +144,15 @@ function changeUnit(unit) {
   // Update all temperature displays
   updateTemperatureDisplays();
 
-  // Refresh data if we have a location
-  if (lastLocation) {
-    fetchAllWeatherData(lastLocation);
+  // Instant local conversion and re-render without network requests
+  if (currentWeatherData) {
+    displayCurrentWeather(currentWeatherData);
+  }
+
+  if (currentForecastData) {
+    displayHourlyForecast(currentForecastData);
+    displayDailyForecast(currentForecastData);
+    createTemperatureChart(currentForecastData);
   }
 }
 
@@ -176,6 +183,7 @@ async function fetchAllWeatherData(location) {
     }
 
     if (forecast) {
+      currentForecastData = forecast;
       displayHourlyForecast(forecast);
       displayDailyForecast(forecast);
       createTemperatureChart(forecast);
